@@ -81,31 +81,28 @@ def import_labels(labels):
 
 def import_comments(comments, issue_number):
 	for comment in comments:
-		comment_creator = comment["user"]["login"]
-		comment["body"] = "Comment by: [%s](http://github.com/%s)\n\n%s" % (comment_creator, comment_creator, comment["body"])
-
-		send_post_request("%s/issues/%s/comments" % (dst_url, issue_number), comment)
-
-def import_pull_requests(issue, issue_number):
-	if "pull_request" in issue and issue["pull_request"]["html_url"] is not None:
-		committer_name = issue["user"]["login"]
-		comment = {"body": "**[#%s](%s)** added a commit: %s" % (committer_name, committer_name, issue["pull_request"]["html_url"])}
+		comment_creator = "[%s](http://github.com/%s)" % (comment["user"]["login"], comment["user"]["login"])
+		comment_date = comment["created_at"]
+		#comment_date = "[%s](http://github.com/%s)" % (comment["created_at"], comment["html_url"]) # TODO: Make pretty, and fix url
+		comment["body"] = "_Comment by **%s** from %s_\n\n----\n%s" % (comment_creator, comment_date, comment["body"])
 
 		send_post_request("%s/issues/%s/comments" % (dst_url, issue_number), comment)
 
 def import_issues(issues, dst_milestones, dst_labels):
 	for issue in issues:
 
-		issue_creator = issue["user"]["login"]
+		issue_creator = "[%s](http://github.com/%s)" % (issue["user"]["login"], issue["user"]["login"])
+		issue_date = issue["created_at"] # TODO: Make pretty
 		issue_url = issue["html_url"]
-		issue_id = issue["number"]
 
 		if "body" in issue and issue["body"] is not None:
-			issue_header = "Issue [#%s](%s) by: [%s](http://github.com/%s)\n" % (issue_id, issue_url, issue_creator, issue_creator)
-			issue["body"] = issue_header + "\n\n\n" + issue["body"]
+			issue_header = "_Issue by **%s** from %s_\n" % (issue_creator, issue_date)
+			issue_header += "_Originally opened as %s_\n\n----\n" % (issue_url)
+			issue["body"] = issue_header + issue["body"]
+			if "pull_request" in issue and issue["pull_request"]["html_url"] is not None:
+				issue["body"] += "\n\n----\n_**%s** included the following code: %s/commits_" % (issue_creator, issue["pull_request"]["html_url"])
 
 		res_issue = send_post_request("%s/issues" % dst_url, issue)
-		import_pull_requests(issue, res_issue["number"])
 
 		comments = get_comments_on_issue(issue)
 		import_comments(comments, res_issue["number"])
