@@ -1,0 +1,5 @@
+# Rename to `config.py`, and keep it in the same folder as `gh-issues-import.py`
+username = "user@example.com"
+password = "naked_password"
+src_repo = "octocat/Hello-World"
+dst_repo = "helloworld-inc/Hello-World"

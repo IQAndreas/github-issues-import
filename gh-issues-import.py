@@ -3,12 +3,8 @@ import json
 import base64
 import sys
 
-#==== configurations =======
-username = "username"
-password = "password"
-src_repo = "octocat/HelloWorld"
-dst_repo = "demo/HelloWorld"
-#==== end of configurations ===
+# WARNING: The config file can contain any valid Python code!
+from config import *
 
 server = "api.github.com"
 src_url = "https://%s/repos/%s" % (server, src_repo)
