@@ -14,8 +14,8 @@ src_url = "https://%s/repos/%s" % (server, src_repo)
 dst_url = "https://%s/repos/%s" % (server, dst_repo)
 
 def send_post_request(url, data):
-	req = urllib.request.Request(url, json.dumps(data))
-	req.add_header("Authorization", "Basic " + base64.urlsafe_b64encode("%s:%s" % (username, password)))
+	req = urllib.request.Request(url, json.dumps(data).encode("utf-8"))
+	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
 	
@@ -63,7 +63,7 @@ def import_milestones(milestones):
 		}
 		
 		res_milestone = send_post_request("%s/milestones" % dst_url, data)
-		print("Successfully created milestone %s" % res_milestone["title"])
+		print("Successfully created milestone '%s'" % res_milestone["title"])
 
 def import_labels(labels):
 	for source in labels:
@@ -73,7 +73,7 @@ def import_labels(labels):
 		}
 		
 		res_label = send_post_request("%s/labels" % dst_url, data)
-		print("Successfully created label %s" % res_label["name"])
+		print("Successfully created label '%s'" % res_label["name"])
 
 def import_comments(comments, issue_number):
 	for comment in comments:
@@ -106,7 +106,7 @@ def import_issues(issues, dst_milestones, dst_labels):
 		comments = get_comments_on_issue(issue)
 		import_comments(comments, res_issue["number"])
 
-		print("Successfully created issue %s" % res_issue["title"].encode("utf-8"))
+		print("Successfully created issue '%s'" % res_issue["title"])
 
 def main():
 	#get milestones and issues to import
