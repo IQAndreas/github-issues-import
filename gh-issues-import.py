@@ -1,6 +1,7 @@
 import urllib.request, urllib.error, urllib.parse
 import json
 import base64
+import sys
 
 #==== configurations =======
 username = "username"
@@ -33,6 +34,9 @@ def get_milestones(url):
 
 def get_labels(url):
 	return send_get_request("%s/labels" % url)
+	
+def get_issue_by_id(url, issue_id):
+	return send_get_request("%s/issues/%d" % (url, issue_id))
 
 def get_issues(url):
 	issues = []
@@ -108,7 +112,25 @@ def import_issues(issues, dst_milestones, dst_labels):
 
 		print("Successfully created issue '%s'" % res_issue["title"])
 
-def main():
+def import_some_issues(issue_ids):
+	
+	# Ignore retrieveing new milestones and lables for now
+	
+	# Import existing milestones and labels
+	milestones = get_milestones(dst_url)
+	labels = get_labels(dst_url)
+
+	# Populate issues based on issue IDs
+	issues = []
+	for issue_id in issue_ids:
+		issues.append(get_issue_by_id(src_url, int(issue_id)))
+	
+	# Finally, import everything
+	import_issues(issues, milestones, labels)
+	
+	
+def import_all_issues():
+
 	#get milestones and issues to import
 	milestones = get_milestones(src_url)
 	labels = get_labels(src_url)
@@ -126,4 +148,8 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
+	issue_ids = sys.argv[1:] # Exclude command name
+	if (len(issue_ids) > 0):
+		import_some_issues(issue_ids)
+	else:
+		import_all_issues()
