@@ -38,7 +38,7 @@ def get_issues(url):
 	issues = []
 	i = 1
 	while True:
-		newIssues = send_get_request("%s/issues?state=open&page=%d" % (url, i))
+		newIssues = send_get_request("%s/issues?state=open&direction=asc&page=%d" % (url, i))
 		if not newIssues:
 			break
 		issues.extend(newIssues)
