@@ -40,4 +40,12 @@ Labels attached to the issue will be imported and added to the target repo if th
 
 Any milestones attached to issues will simply be ignored and need to be added manually. This is because they have different issue IDs across repos (like imported issues do) which will cause problems in the target repo. Importing Milestones has been temporarily disabled until this has been fixed.
 
+#### Examples ####
+
+![Example result of an imported pull request](https://raw.github.com/IQAndreas/github-issues-import/docs/example-imported-issue.png)
+
+* [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/1) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
+* [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/2) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))
+* [**Example issue with comments**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/3) ([original](https://github.com/IQAndreas/github-issues-import/issues/3))
+
 
