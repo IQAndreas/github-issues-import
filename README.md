@@ -5,6 +5,8 @@ This Python script allows you to import issues and pull requests from one reposi
 
 Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separated from its original location at [`mokorenkov/tools`](https://github.com/mkorenkov/tools).
 
+The repo also contains a [new file](new_file.txt) with text in it that you may enjoy reading.
+
 #### Usage ####
 
 Rename `config.py.sample` to `config.py`, and edit the fields to match your login info and repository info. 
@@ -13,7 +15,7 @@ Rename `config.py.sample` to `config.py`, and edit the fields to match your logi
 
  * This config file can contain any valid Python syntax, so be careful!
  * The password is stored in plaintext, so avoid storing the config file in a public repository.
- 
+
 Run the script with the following command to import all issues into the repository defined in the config:
 
 ```
