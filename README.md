@@ -36,7 +36,8 @@ Any comments on the issue will be imported, however, the author of all imported 
 
 If allowed by GitHub's policies, it may be a good idea to use a "neutral" account to import the issues and issue comments to avoid imported comments from getting mixed up with developer comments (example: [FlixelCommunityBot](https://github.com/FlixelCommunityBot?tab=activity)).
 
-Milestones and Labels attached to the issue will be imported and added to the target repo if they do not already exist there.
+Labels attached to the issue will be imported and added to the target repo if they do not already exist there.
 
+Any milestones attached to issues will simply be ignored and need to be added manually. This is because they have different issue IDs across repos (like imported issues do) which will cause problems in the target repo. Importing Milestones has been temporarily disabled until this has been fixed.
 
 

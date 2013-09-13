@@ -15,7 +15,7 @@ def send_post_request(url, data):
 	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
-	
+
 	response = urllib.request.urlopen(req)
 	json_data = response.read()
 	return json.loads(json_data.decode("utf-8"))
@@ -90,6 +90,11 @@ def import_issues(issues, dst_milestones, dst_labels):
 		issue_creator = "[%s](http://github.com/%s)" % (issue["user"]["login"], issue["user"]["login"])
 		issue_date = issue["created_at"] # TODO: Make pretty
 		issue_url = issue["html_url"]
+		
+		# Temporarily disable milestones! TODO: Fix this
+		# This happens because "milestone" needs to be a uint of the id of the milestone,
+		#  but the code that gets the milestone gives a whole bunch of unecessary details.
+		del issue["milestone"]
 
 		if "body" in issue and issue["body"] is not None:
 			issue_header = "_Issue by **%s** from %s_\n" % (issue_creator, issue_date)
@@ -109,8 +114,9 @@ def import_some_issues(issue_ids):
 	
 	# Ignore retrieveing new milestones and lables for now
 	
-	# Import existing milestones and labels
-	milestones = get_milestones(dst_url)
+	# Fetch existing milestones and labels
+	#TODO: milestones = get_milestones(dst_url)
+	milestones = []
 	labels = get_labels(dst_url)
 
 	# Populate issues based on issue IDs
@@ -125,14 +131,16 @@ def import_some_issues(issue_ids):
 def import_all_issues():
 
 	#get milestones and issues to import
-	milestones = get_milestones(src_url)
+	#TODO: milestones = get_milestones(src_url)
+	milestones = []
 	labels = get_labels(src_url)
 	#do import
-	import_milestones(milestones)
+	#import_milestones(milestones)
 	import_labels(labels)
 
 	#get imported milestones and labels
-	milestones = get_milestones(dst_url)
+	#TODO: milestones = get_milestones(dst_url)
+	milestones = []
 	labels = get_labels(dst_url)
 
 	#process issues
