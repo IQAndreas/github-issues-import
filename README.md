@@ -5,6 +5,8 @@ This Python script allows you to import issues and pull requests from one reposi
 
 Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separated from its original location at [`mokorenkov/tools`](https://github.com/mkorenkov/tools).
 
+The repo also contains a [new file](new_file.txt) with text in it that you may enjoy reading.
+
 #### Usage ####
 
 Rename `config.py.sample` to `config.py`, and edit the fields to match your login info and repository info. 
