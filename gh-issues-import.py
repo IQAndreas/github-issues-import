@@ -2,6 +2,10 @@ import urllib.request, urllib.error, urllib.parse
 import json
 import base64
 import sys
+import datetime
+
+# Default optional config values (to avoid errors)
+date_format = '%A %b %d, %Y at %H:%M GMT'
 
 # WARNING: The config file can contain any valid Python code!
 from config import *
@@ -9,6 +13,11 @@ from config import *
 server = "api.github.com"
 src_url = "https://%s/repos/%s" % (server, src_repo)
 dst_url = "https://%s/repos/%s" % (server, dst_repo)
+
+def format_date(datestring):
+	# The date comes from the API in ISO-8601 format
+	date = datetime.datetime.strptime(datestring, "%Y-%m-%dT%H:%M:%SZ")
+	return date.strftime(date_format)
 
 def send_post_request(url, data):
 	req = urllib.request.Request(url, json.dumps(data).encode("utf-8"))
@@ -78,8 +87,8 @@ def import_labels(labels):
 def import_comments(comments, issue_number):
 	for comment in comments:
 		comment_creator = "[%s](http://github.com/%s)" % (comment["user"]["login"], comment["user"]["login"])
-		comment_date = comment["created_at"]
-		#comment_date = "[%s](http://github.com/%s)" % (comment["created_at"], comment["html_url"]) # TODO: Make pretty, and fix url
+		comment_date = format_date(comment["created_at"])
+		
 		comment["body"] = "_Comment by **%s** from %s_\n\n----\n%s" % (comment_creator, comment_date, comment["body"])
 
 		send_post_request("%s/issues/%s/comments" % (dst_url, issue_number), comment)
@@ -88,7 +97,7 @@ def import_issues(issues, dst_milestones, dst_labels):
 	for issue in issues:
 
 		issue_creator = "[%s](http://github.com/%s)" % (issue["user"]["login"], issue["user"]["login"])
-		issue_date = issue["created_at"] # TODO: Make pretty
+		issue_date = format_date(issue["created_at"])
 		issue_url = issue["html_url"]
 		
 		# Temporarily disable milestones! TODO: Fix this
