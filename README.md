@@ -34,6 +34,8 @@ If the issue is a pull request, this will be indicated on the issue, and a link 
 
 Any comments on the issue will be imported, however, the author of all imported comments will be the account specified in the config. Instead, a link and header is provided for each comment indicating who the original author was and the original date and time of the comment. Any subsequent comments added to the issue after it has been imported into the target repository will not be included.
 
+If allowed by GitHub's policies, it may be a good idea to use a "neutral" account to import the issues and issue comments to avoid imported comments from getting mixed up with developer comments (example: [FlixelCommunityBot](https://github.com/FlixelCommunityBot?tab=activity)).
+
 Milestones and Labels attached to the issue will be imported and added to the target repo if they do not already exist there.
 
 
