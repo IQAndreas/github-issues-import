@@ -15,7 +15,11 @@ source_url = None
 target_url = None
 
 def init_config():
-
+	
+	config.add_section('login')
+	config.add_section('repository')
+	config.add_section('format')
+	
 	arg_parser = argparse.ArgumentParser()
 	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script.")
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
@@ -48,6 +52,27 @@ def format_date(datestring):
 	date = datetime.datetime.strptime(datestring, "%Y-%m-%dT%H:%M:%SZ")
 	date_format = config.get('format', 'date', fallback='%A %b %d, %Y at %H:%M GMT', raw=True);
 	return date.strftime(date_format)
+	
+def format_from_template(template_filename, template_data):
+	from string import Template
+	template_file = open(template_filename, 'r')
+	template = Template(template_file.read())
+	return template.substitute(template_data)
+
+def format_issue(template_data):
+	default_template = os.path.join(__location__, 'templates', 'issue.md')
+	template = config.get('format', 'issue_template', fallback=default_template)
+	return format_from_template(template, template_data)
+
+def format_pull_request(template_data):
+	default_template = os.path.join(__location__, 'templates', 'pull_request.md')
+	template = config.get('format', 'pull_request_template', fallback=default_template)
+	return format_from_template(template, template_data)
+
+def format_comment(template_data):
+	default_template = os.path.join(__location__, 'templates', 'comment.md')
+	template = config.get('format', 'comment_template', fallback=default_template)
+	return format_from_template(template, template_data)
 
 def send_post_request(url, data):
 	req = urllib.request.Request(url, json.dumps(data).encode("utf-8"))
@@ -120,32 +145,38 @@ def import_labels(labels):
 
 def import_comments(comments, issue_number):
 	for comment in comments:
-		comment_creator = "[%s](http://github.com/%s)" % (comment["user"]["login"], comment["user"]["login"])
-		comment_date = format_date(comment["created_at"])
+	
+		template_data = {}
+		template_data['comment_creator_username'] = comment["user"]["login"]
+		template_data['comment_creator_url'] = comment["user"]["html_url"]
+		template_data['comment_date'] = format_date(comment["created_at"])
+		template_data['comment_url'] =  comment["html_url"]
+		template_data['comment_body'] = comment["body"]
 		
-		comment["body"] = "_Comment by **%s** from %s_\n\n----\n%s" % (comment_creator, comment_date, comment["body"])
+		comment["body"] = format_comment(template_data)
 
 		send_post_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
 
 def import_issues(issues, dst_milestones, dst_labels):
 	for issue in issues:
-
-		issue_creator = "[%s](http://github.com/%s)" % (issue["user"]["login"], issue["user"]["login"])
-		issue_date = format_date(issue["created_at"])
-		issue_url = issue["html_url"]
+		
+		template_data = {}
+		template_data['issue_creator_username'] = issue["user"]["login"]
+		template_data['issue_creator_url'] = issue["user"]["html_url"]
+		template_data['issue_date'] = format_date(issue["created_at"])
+		template_data['issue_url'] =  issue["html_url"]
+		template_data['issue_body'] = issue["body"]
+		
+		if "pull_request" in issue and issue["pull_request"]["html_url"] is not None:
+			issue["body"] = format_pull_request(template_data)
+		else:
+			issue["body"] = format_issue(template_data)
 		
 		# Temporarily disable milestones! TODO: Fix this
 		# This happens because "milestone" needs to be a uint of the id of the milestone,
 		#  but the code that gets the milestone gives a whole bunch of unecessary details.
 		del issue["milestone"]
-
-		if "body" in issue and issue["body"] is not None:
-			issue_header = "_Issue by **%s** from %s_\n" % (issue_creator, issue_date)
-			issue_header += "_Originally opened as %s_\n\n----\n" % (issue_url)
-			issue["body"] = issue_header + issue["body"]
-			if "pull_request" in issue and issue["pull_request"]["html_url"] is not None:
-				issue["body"] += "\n\n----\n_**%s** included the following code: %s/commits_" % (issue_creator, issue["pull_request"]["html_url"])
-
+		
 		res_issue = send_post_request("%s/issues" % target_url, issue)
 
 		comments = get_comments_on_issue(issue)

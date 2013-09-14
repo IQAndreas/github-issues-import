@@ -35,6 +35,10 @@ Labels attached to the issue will be imported and added to the target repo if th
 
 Any milestones attached to issues will simply be ignored and need to be added manually. This is because they have different issue IDs across repos (like imported issues do) which will cause problems in the target repo. Importing Milestones has been temporarily disabled until this has been fixed.
 
+#### Templates ####
+
+The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`](templates/) directory. You can edit those, or point to your own templates from the config file.
+
 #### Examples ####
 
 ![Example result of an imported pull request](https://raw.github.com/IQAndreas/github-issues-import/docs/example-imported-issue.png)
