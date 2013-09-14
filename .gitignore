@@ -1,4 +1,4 @@
 .idea/*
 __pycache__/*
 *.py~
-config.py
+config.ini

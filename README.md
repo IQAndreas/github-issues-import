@@ -7,12 +7,7 @@ Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separat
 
 #### Usage ####
 
-Rename `config.py.sample` to `config.py`, and edit the fields to match your login info and repository info. 
-
-**Warning:**
-
- * This config file can contain any valid Python syntax, so be careful!
- * The password is stored in plaintext, so avoid storing the config file in a public repository.
+Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. **Warning:** The password is stored in plaintext, so avoid storing the config file in a public repository.
  
 Run the script with the following command to import all issues into the repository defined in the config:
 
