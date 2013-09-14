@@ -139,7 +139,7 @@ def import_some_issues(issue_ids):
 	import_issues(issues, milestones, labels)
 	
 	
-def import_all_issues():
+def import_all_open_issues():
 
 	#get milestones and issues to import
 	#TODO: milestones = get_milestones(src_url)
@@ -164,4 +164,4 @@ if __name__ == '__main__':
 	if (len(issue_ids) > 0):
 		import_some_issues(issue_ids)
 	else:
-		import_all_issues()
+		import_all_open_issues()
