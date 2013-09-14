@@ -5,26 +5,43 @@ import json
 import base64
 import sys, os
 import datetime
-import configparser
+import argparse, configparser
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 default_config_file = os.path.join(__location__, 'config.ini')
 config = configparser.ConfigParser()
 
 source_url = None
-destination_url = None
+target_url = None
 
-def init_config(config_file, args):
+def init_config():
 
-	config.read(config_file)
+	arg_parser = argparse.ArgumentParser()
+	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script.")
+	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
+	arg_parser.add_argument('-p', '--password', help="The password (in plaintext) of the account that will create the new issues. The password will not be stored anywhere if passed in as an argument.")
+	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
+	arg_parser.add_argument('-t', '--target', help="The destination repository which the issues should be copied to. Should be in the format `user/repository`.")
+	arg_parser.add_argument("issues", type=int, nargs='*', help="The list of issues to import. If no issue ID is provided, all open issues will be imported.");
 	
-	#TODO: Set values (which override the config values) if passed in by arguments
+	args = arg_parser.parse_args()
+	
+	if (args.config):
+		config.read(args.config)
+	else:
+		config.read(default_config_file)
+	
+	if (args.username): config.set('login', 'username', args.username)
+	if (args.password): config.set('login', 'password', args.password)
+	
 	#TODO: Make sure no config values are missing
 	
-	global source_url, destination_url
+	global source_url, target_url
 	server = "api.github.com"
-	source_url =      "https://%s/repos/%s" % (server, config.get('repository', 'source'))
-	destination_url = "https://%s/repos/%s" % (server, config.get('repository', 'destination'))
+	source_url = "https://%s/repos/%s" % (server, config.get('repository', 'source'))
+	target_url = "https://%s/repos/%s" % (server, config.get('repository', 'target'))
+	
+	return args.issues
 
 def format_date(datestring):
 	# The date comes from the API in ISO-8601 format
@@ -33,12 +50,12 @@ def format_date(datestring):
 	return date.strftime(date_format)
 
 def send_post_request(url, data):
-
+	req = urllib.request.Request(url, json.dumps(data).encode("utf-8"))
+	
 	username = config.get('login', 'username')
 	password = config.get('login', 'password')
-
-	req = urllib.request.Request(url, json.dumps(data).encode("utf-8"))
 	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
+	
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
 
@@ -88,7 +105,7 @@ def import_milestones(milestones):
 			"due_on": source["due_on"]
 		}
 		
-		res_milestone = send_post_request("%s/milestones" % destination_url, data)
+		res_milestone = send_post_request("%s/milestones" % target_url, data)
 		print("Successfully created milestone '%s'" % res_milestone["title"])
 
 def import_labels(labels):
@@ -98,7 +115,7 @@ def import_labels(labels):
 			"color": source["color"]
 		}
 		
-		res_label = send_post_request("%s/labels" % destination_url, data)
+		res_label = send_post_request("%s/labels" % target_url, data)
 		print("Successfully created label '%s'" % res_label["name"])
 
 def import_comments(comments, issue_number):
@@ -108,7 +125,7 @@ def import_comments(comments, issue_number):
 		
 		comment["body"] = "_Comment by **%s** from %s_\n\n----\n%s" % (comment_creator, comment_date, comment["body"])
 
-		send_post_request("%s/issues/%s/comments" % (destination_url, issue_number), comment)
+		send_post_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
 
 def import_issues(issues, dst_milestones, dst_labels):
 	for issue in issues:
@@ -129,7 +146,7 @@ def import_issues(issues, dst_milestones, dst_labels):
 			if "pull_request" in issue and issue["pull_request"]["html_url"] is not None:
 				issue["body"] += "\n\n----\n_**%s** included the following code: %s/commits_" % (issue_creator, issue["pull_request"]["html_url"])
 
-		res_issue = send_post_request("%s/issues" % destination_url, issue)
+		res_issue = send_post_request("%s/issues" % target_url, issue)
 
 		comments = get_comments_on_issue(issue)
 		import_comments(comments, res_issue["number"])
@@ -141,9 +158,9 @@ def import_some_issues(issue_ids):
 	# Ignore retrieveing new milestones and lables for now
 	
 	# Fetch existing milestones and labels
-	#TODO: milestones = get_milestones(destination_url)
+	#TODO: milestones = get_milestones(target_url)
 	milestones = []
-	labels = get_labels(destination_url)
+	labels = get_labels(target_url)
 
 	# Populate issues based on issue IDs
 	issues = []
@@ -165,9 +182,9 @@ def import_all_open_issues():
 	import_labels(labels)
 
 	#get imported milestones and labels
-	#TODO: milestones = get_milestones(destination_url)
+	#TODO: milestones = get_milestones(target_url)
 	milestones = []
-	labels = get_labels(destination_url)
+	labels = get_labels(target_url)
 
 	#process issues
 	issues = get_issues(source_url)
@@ -176,10 +193,8 @@ def import_all_open_issues():
 
 if __name__ == '__main__':
 	
-	#TODO: Allow setting the config file location from an argument
-	init_config(default_config_file, sys.argv)
+	issue_ids = init_config()
 	
-	issue_ids = sys.argv[1:] # Exclude command name
 	if (len(issue_ids) > 0):
 		import_some_issues(issue_ids)
 	else:

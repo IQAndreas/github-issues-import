@@ -6,8 +6,8 @@ username = user@example.com
 password = naked_password
 
 [repository]
-source =      octocat/Hello-World
-destination = helloworld-inc/Hello-World
+source = octocat/Hello-World
+target = helloworld-inc/Hello-World
 
 [format] # These can be adjusted based on your group's region and language.
 
