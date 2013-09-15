@@ -7,6 +7,8 @@ import sys, os
 import datetime
 import argparse, configparser
 
+import query
+
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 default_config_file = os.path.join(__location__, 'config.ini')
 config = configparser.ConfigParser()
@@ -51,10 +53,9 @@ def init_config():
 	
 	# Prompt for username/password if none is provided in either the config or an argument
 	if not config.has_option('login', 'username') :
-		config.set('login', 'username', input("Enter your username for GitHub.com: "))
+		config.set('login', 'username', query.username("Enter your username for GitHub.com: "))
 	if not config.has_option('login', 'password') :
-		import getpass
-		config.set('login', 'password', getpass.getpass("Enter your password for GitHub.com: "))
+		config.set('login', 'password', query.password("Enter your password for GitHub.com: "))
 	
 	#TODO: Make sure no config values are missing
 	
@@ -241,6 +242,14 @@ def import_issues(issues):
 			new_issue['body'] = format_issue(template_data)
 		
 		new_issues.append(new_issue)
+	
+	print("You are about to add to '" + config.get('repository', 'target') + "':")
+	print(" *", len(new_issues), "new issues") 
+	print(" *", num_new_comments, "new comments") 
+	print(" *", len(new_milestones), "new milestones") 
+	print(" *", len(new_labels), "new labels") 
+	if not query.yes_no("Are you sure you wish to continue?"):
+		sys.exit()
 	
 	for milestone in new_milestones:
 		result_milestone = import_milestone(milestone)
