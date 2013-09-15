@@ -19,13 +19,20 @@ def init_config():
 	config.add_section('login')
 	config.add_section('repository')
 	config.add_section('format')
+	config.add_section('settings')
 	
 	arg_parser = argparse.ArgumentParser()
+	
 	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script.")
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-p', '--password', help="The password (in plaintext) of the account that will create the new issues. The password will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
 	arg_parser.add_argument('-t', '--target', help="The destination repository which the issues should be copied to. Should be in the format `user/repository`.")
+	
+	arg_parser.add_argument('--ignore-comments',  dest='ignore_comments',  action='store_true', help="Do not import comments in the issue.")		
+	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
+	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
+	
 	arg_parser.add_argument("issues", type=int, nargs='*', help="The list of issues to import. If no issue ID is provided, all open issues will be imported.");
 	
 	args = arg_parser.parse_args()
@@ -37,6 +44,10 @@ def init_config():
 	
 	if (args.username): config.set('login', 'username', args.username)
 	if (args.password): config.set('login', 'password', args.password)
+	
+	config.set('settings', 'import-comments',  str(not args.ignore_comments))
+	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
+	config.set('settings', 'import-labels',    str(not args.ignore_labels))
 	
 	#TODO: Make sure no config values are missing
 	
@@ -184,11 +195,11 @@ def import_issues(issues):
 		new_issue = {}
 		new_issue['title'] = issue['title']
 		
-		if 'comments' in issue and issue['comments'] != 0:
+		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
 			new_issue['comments'] = get_comments_on_issue(issue)
 		
-		if 'milestone' in issue and issue['milestone'] is not None:
+		if config.getboolean('settings', 'import-milestone') and 'milestone' in issue and issue['milestone'] is not None:
 			# Since the milestones' ids are going to differ, we will compare them by title instead
 			found_milestone = get_milestone_by_title(issue['milestone']['title'])
 			if found_milestone:
@@ -199,7 +210,7 @@ def import_issues(issues):
 				milestones.append(new_milestone)     # Allow it to be found next time
 				new_milestones.append(new_milestone) # Put it in a queue to add it later
 		
-		if 'labels' in issue and issue['labels'] is not None:
+		if config.getboolean('settings', 'import-labels') and 'labels' in issue and issue['labels'] is not None:
 			new_issue['label_objects'] = []
 			for issue_label in issue['labels']:
 				found_label = get_label_by_name(issue_label['name'])
