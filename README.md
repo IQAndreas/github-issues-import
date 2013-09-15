@@ -33,11 +33,9 @@ If the issue is a pull request, this will be indicated on the issue, and a link 
 
 Any comments on the issue will be imported, however, the author of all imported comments will be the account specified in the config. Instead, a link and header is provided for each comment indicating who the original author was and the original date and time of the comment. Any subsequent comments added to the issue after it has been imported into the target repository will not be included.
 
+Labels and milestones attached to the issue will be imported and added to the target repository if they do not already exist there. If the label or milestone with the same name already exists, the issue will point to the existing one, and any difference in the description or other details will be ignored.
+
 If allowed by GitHub's policies, it may be a good idea to use a "neutral" account to import the issues and issue comments to avoid imported comments from getting mixed up with developer comments (example: [FlixelCommunityBot](https://github.com/FlixelCommunityBot?tab=activity)).
-
-Labels attached to the issue will be imported and added to the target repo if they do not already exist there.
-
-Any milestones attached to issues will simply be ignored and need to be added manually. This is because they have different issue IDs across repos (like imported issues do) which will cause problems in the target repo. Importing Milestones has been temporarily disabled until this has been fixed.
 
 #### Templates ####
 
@@ -50,5 +48,6 @@ The script will by default use the [Markdown-formatted](http://github.github.com
 * [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/1) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
 * [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/2) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))
 * [**Example issue with comments**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/3) ([original](https://github.com/IQAndreas/github-issues-import/issues/3))
+* [**Example issue with milestone**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/24) ([original](https://github.com/IQAndreas/github-issues-import/issues/9))
 
 

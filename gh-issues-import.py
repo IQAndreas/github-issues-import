@@ -102,124 +102,172 @@ def get_labels(url):
 def get_issue_by_id(url, issue_id):
 	return send_get_request("%s/issues/%d" % (url, issue_id))
 
-def get_issues(url):
+def get_open_issues(url):
 	issues = []
-	i = 1
+	page = 1
 	while True:
-		newIssues = send_get_request("%s/issues?state=open&direction=asc&page=%d" % (url, i))
-		if not newIssues:
+		new_issues = send_get_request("%s/issues?state=open&direction=asc&page=%d" % (url, page))
+		if not new_issues:
 			break
-		issues.extend(newIssues)
-		i += 1
+		issues.extend(new_issues)
+		page += 1
 	return issues
 
 def get_comments_on_issue(issue):
-	if "comments" in issue \
-	  and issue["comments"] is not None \
-	  and issue["comments"] != 0:
-		return send_get_request("%s/comments" % issue["url"])
+	if issue['comments'] != 0:
+		return send_get_request("%s/comments" % issue['url'])
 	else :
 		return []
 
-def import_milestones(milestones):
-	for source in milestones:
-		data = {
-			"title": source["title"],
-			"state": "open",
-			"description": source["description"],
-			"due_on": source["due_on"]
-		}
-		
-		res_milestone = send_post_request("%s/milestones" % target_url, data)
-		print("Successfully created milestone '%s'" % res_milestone["title"])
+def import_milestone(source):
+	data = {
+		"title": source['title'],
+		"state": "open",
+		"description": source['description'],
+		"due_on": source['due_on']
+	}
+	
+	result_milestone = send_post_request("%s/milestones" % target_url, source)
+	print("Successfully created milestone '%s'" % result_milestone['title'])
+	return result_milestone
 
-def import_labels(labels):
-	for source in labels:
-		data = {
-			"name": source["name"],
-			"color": source["color"]
-		}
-		
-		res_label = send_post_request("%s/labels" % target_url, data)
-		print("Successfully created label '%s'" % res_label["name"])
+def import_label(source):
+	data = {
+		"name": source['name'],
+		"color": source['color']
+	}
+	
+	result_label = send_post_request("%s/labels" % target_url, source)
+	print("Successfully created label '%s'" % result_label['name'])
+	return result_label
 
 def import_comments(comments, issue_number):
+	result_comments = []
 	for comment in comments:
 	
 		template_data = {}
-		template_data['comment_creator_username'] = comment["user"]["login"]
-		template_data['comment_creator_url'] = comment["user"]["html_url"]
-		template_data['comment_date'] = format_date(comment["created_at"])
-		template_data['comment_url'] =  comment["html_url"]
-		template_data['comment_body'] = comment["body"]
+		template_data['comment_creator_username'] = comment['user']['login']
+		template_data['comment_creator_url'] = comment['user']['html_url']
+		template_data['comment_date'] = format_date(comment['created_at'])
+		template_data['comment_url'] =  comment['html_url']
+		template_data['comment_body'] = comment['body']
 		
-		comment["body"] = format_comment(template_data)
+		comment['body'] = format_comment(template_data)
 
-		send_post_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
+		result_comment = send_post_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
+		result_comments.append(result_comment)
+		
+	return result_comments
 
-def import_issues(issues, dst_milestones, dst_labels):
+# Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
+def import_issues(issues):
+	
+	milestones = get_milestones(source_url)
+	def get_milestone_by_title(title):
+		for milestone in milestones:
+			if milestone['title'] == title : return milestone
+		return None
+	
+	labels = get_labels(source_url)
+	def get_label_by_name(name):
+		for label in labels:
+			if label['name'] == name : return label
+		return None
+	
+	new_issues = []
+	num_new_comments = 0
+	new_milestones = []
+	new_labels = []
+	
 	for issue in issues:
 		
+		new_issue = {}
+		new_issue['title'] = issue['title']
+		
+		if 'comments' in issue and issue['comments'] != 0:
+			num_new_comments += int(issue['comments'])
+			new_issue['comments'] = get_comments_on_issue(issue)
+		
+		if 'milestone' in issue and issue['milestone'] is not None:
+			# Since the milestones' ids are going to differ, we will compare them by title instead
+			found_milestone = get_milestone_by_title(issue['milestone']['title'])
+			if found_milestone:
+				new_issue['milestone_object'] = found_milestone
+			else:
+				new_milestone = issue['milestone']
+				new_issue['milestone_object'] = new_milestone
+				milestones.append(new_milestone)     # Allow it to be found next time
+				new_milestones.append(new_milestone) # Put it in a queue to add it later
+		
+		if 'labels' in issue and issue['labels'] is not None:
+			new_issue['label_objects'] = []
+			for issue_label in issue['labels']:
+				found_label = get_label_by_name(issue_label['name'])
+				if found_label:
+					new_issue['label_objects'].append(found_label)
+				else:
+					new_issue['label_objects'].append(issue_label)
+					labels.append(issue_label) # Allow it to be found next time
+					new_labels.append(issue_label)   # Put it in a queue to add it later
+		
 		template_data = {}
-		template_data['issue_creator_username'] = issue["user"]["login"]
-		template_data['issue_creator_url'] = issue["user"]["html_url"]
-		template_data['issue_date'] = format_date(issue["created_at"])
-		template_data['issue_url'] =  issue["html_url"]
-		template_data['issue_body'] = issue["body"]
+		template_data['issue_creator_username'] = issue['user']['login']
+		template_data['issue_creator_url'] = issue['user']['html_url']
+		template_data['issue_date'] = format_date(issue['created_at'])
+		template_data['issue_url'] =  issue['html_url']
+		template_data['issue_body'] = issue['body']
 		
-		if "pull_request" in issue and issue["pull_request"]["html_url"] is not None:
-			issue["body"] = format_pull_request(template_data)
+		if "pull_request" in issue and issue['pull_request']['html_url'] is not None:
+			new_issue['body'] = format_pull_request(template_data)
 		else:
-			issue["body"] = format_issue(template_data)
+			new_issue['body'] = format_issue(template_data)
 		
-		# Temporarily disable milestones! TODO: Fix this
-		# This happens because "milestone" needs to be a uint of the id of the milestone,
-		#  but the code that gets the milestone gives a whole bunch of unecessary details.
-		del issue["milestone"]
+		new_issues.append(new_issue)
+	
+	for milestone in new_milestones:
+		result_milestone = import_milestone(milestone)
+		milestone['number'] = result_milestone['number']
+		milestone['url'] = result_milestone['url']
+	
+	for label in new_labels:
+		result_label = import_label(label)
+	
+	result_issues = []
+	for issue in new_issues:
 		
-		res_issue = send_post_request("%s/issues" % target_url, issue)
+		if 'milestone_object' in issue:
+			issue['milestone'] = issue['milestone_object']['number']
+			del issue['milestone_object']
+		
+		if 'label_objects' in issue:
+			issue_labels = []
+			for label in issue['label_objects']:
+				issue_labels.append(label['name'])
+			issue['labels'] = issue_labels
+			del issue['label_objects']
+		
+		result_issue = send_post_request("%s/issues" % target_url, issue)
+		print("Successfully created issue '%s'" % result_issue['title'])
+		
+		if 'comments' in issue:
+			result_comments = import_comments(issue['comments'], result_issue['number'])		
+			print(" > Successfully added", len(result_comments), "comments.")
+		
+		result_issues.append(result_issue)
 
-		comments = get_comments_on_issue(issue)
-		import_comments(comments, res_issue["number"])
-
-		print("Successfully created issue '%s'" % res_issue["title"])
+	return result_issues
 
 def import_some_issues(issue_ids):
-	
-	# Ignore retrieveing new milestones and lables for now
-	
-	# Fetch existing milestones and labels
-	#TODO: milestones = get_milestones(target_url)
-	milestones = []
-	labels = get_labels(target_url)
-
 	# Populate issues based on issue IDs
 	issues = []
 	for issue_id in issue_ids:
 		issues.append(get_issue_by_id(source_url, int(issue_id)))
 	
-	# Finally, import everything
-	import_issues(issues, milestones, labels)
-	
-	
+	return import_issues(issues)
+		
 def import_all_open_issues():
-
-	#get milestones and issues to import
-	#TODO: milestones = get_milestones(source_url)
-	milestones = []
-	labels = get_labels(source_url)
-	#do import
-	#import_milestones(milestones)
-	import_labels(labels)
-
-	#get imported milestones and labels
-	#TODO: milestones = get_milestones(target_url)
-	milestones = []
-	labels = get_labels(target_url)
-
-	#process issues
-	issues = get_issues(source_url)
-	import_issues(issues, milestones, labels)
+	issues = get_open_issues(source_url)
+	return import_issues(issues)
 
 
 if __name__ == '__main__':
@@ -230,3 +278,5 @@ if __name__ == '__main__':
 		import_some_issues(issue_ids)
 	else:
 		import_all_open_issues()
+	
+
