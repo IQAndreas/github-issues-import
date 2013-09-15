@@ -7,19 +7,23 @@ Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separat
 
 #### Usage ####
 
-Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. **Warning:** The password is stored in plaintext, so avoid storing the config file in a public repository.
+Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
+
+**Warning:** The password is stored in plaintext, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively.
  
-Run the script with the following command to import all issues into the repository defined in the config:
+Run the script with the following command to import all open issues into the repository defined in the config:
 
 ```
  $ python3 gh-issues-import.py
 ```
 
-Or to only import some issues, run the script and include the issue numbers of all issues you wish to import (can be done for one or several issues):
+Or to only import some issues, run the script and include the issue numbers of all issues you wish to import (can be done for one or several issues, and will even include closed issues):
 
 ```
  $ python3 gh-issues-import.py 25 26 29
 ```
+
+Some config options can be passed as arguments. For a full list, run the script using the `--help` flag.
 
 #### Result ####
 
