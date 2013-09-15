@@ -181,15 +181,15 @@ def import_comments(comments, issue_number):
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
 def import_issues(issues):
 	
-	milestones = get_milestones(source_url)
+	known_milestones = get_milestones(target_url)
 	def get_milestone_by_title(title):
-		for milestone in milestones:
+		for milestone in known_milestones:
 			if milestone['title'] == title : return milestone
 		return None
 	
-	labels = get_labels(source_url)
+	known_labels = get_labels(target_url)
 	def get_label_by_name(name):
-		for label in labels:
+		for label in known_labels:
 			if label['name'] == name : return label
 		return None
 	
@@ -215,8 +215,8 @@ def import_issues(issues):
 			else:
 				new_milestone = issue['milestone']
 				new_issue['milestone_object'] = new_milestone
-				milestones.append(new_milestone)     # Allow it to be found next time
-				new_milestones.append(new_milestone) # Put it in a queue to add it later
+				known_milestones.append(new_milestone) # Allow it to be found next time
+				new_milestones.append(new_milestone)   # Put it in a queue to add it later
 		
 		if config.getboolean('settings', 'import-labels') and 'labels' in issue and issue['labels'] is not None:
 			new_issue['label_objects'] = []
@@ -226,7 +226,7 @@ def import_issues(issues):
 					new_issue['label_objects'].append(found_label)
 				else:
 					new_issue['label_objects'].append(issue_label)
-					labels.append(issue_label) # Allow it to be found next time
+					known_labels.append(issue_label) # Allow it to be found next time
 					new_labels.append(issue_label)   # Put it in a queue to add it later
 		
 		template_data = {}
