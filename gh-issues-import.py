@@ -49,6 +49,13 @@ def init_config():
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
 	
+	# Prompt for username/password if none is provided in either the config or an argument
+	if not config.has_option('login', 'username') :
+		config.set('login', 'username', input("Enter your username for GitHub.com: "))
+	if not config.has_option('login', 'password') :
+		import getpass
+		config.set('login', 'password', getpass.getpass("Enter your password for GitHub.com: "))
+	
 	#TODO: Make sure no config values are missing
 	
 	global source_url, target_url

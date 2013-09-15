@@ -9,7 +9,7 @@ Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separat
 
 Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
 
-**Warning:** The password is stored in plaintext, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively.
+**Warning:** The password is stored in plaintext, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively. If the username or password is not passed in from either of these locations, the user will be prompted for them when the script runs.
  
 Run the script with the following command to import all open issues into the repository defined in the config:
 
