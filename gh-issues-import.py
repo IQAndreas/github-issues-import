@@ -45,10 +45,14 @@ def init_config():
 	
 	args = arg_parser.parse_args()
 	
-	if (args.config):
-		config.read(args.config)
-	else:
-		config.read(default_config_file)
+	config_file_name = default_config_file
+	if (args.config): config_file_name = args.config
+	
+	try:
+		config_file = open(config_file_name)
+		config.read_file(config_file)
+	except FileNotFoundError:
+		sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name);
 	
 	if (args.username): config.set('login', 'username', args.username)
 	if (args.password): config.set('login', 'password', args.password)
