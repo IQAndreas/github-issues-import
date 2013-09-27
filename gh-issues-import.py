@@ -122,7 +122,8 @@ def send_request(url, post_data=None):
 	
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
-
+	req.add_header("User-Agent", "IQAndreas/github-issues-import")
+	
 	try:
 		response = urllib.request.urlopen(req)
 		json_data = response.read()
