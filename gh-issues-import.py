@@ -16,6 +16,12 @@ config = configparser.ConfigParser()
 source_url = None
 target_url = None
 
+http_error_messages = {}
+http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password are correct, and that you have permission to read from or write to the specified repositories."
+http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
+http_error_messages[404] = "ERROR: Unable to find the specified repository.\nDouble check the spelling for the source and target repositories. If either repository is private, make sure the specified user is allowed access to it."
+
+
 def init_config():
 	
 	config.add_section('login')
@@ -106,8 +112,22 @@ def send_request(url, post_data=None):
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
 
-	response = urllib.request.urlopen(req)
-	json_data = response.read()
+	try:
+		response = urllib.request.urlopen(req)
+		json_data = response.read()
+	except urllib.error.HTTPError as error:
+		
+		error_details = error.read();
+		error_details = json.loads(error_details.decode("utf-8"))
+		print(error_details)
+		if (error.code in http_error_messages):
+			sys.exit(http_error_messages[error.code])
+		else:
+			error_message = "ERROR: There was a problem importing the issues.\n%s %s" % (error.code, error.reason)
+			if ('message' in error_details):
+				error_message += "\nDETAILS: " + error_details['message']
+			sys.exit(error_message)
+	
 	return json.loads(json_data.decode("utf-8"))
 
 def get_milestones(url):
