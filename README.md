@@ -23,7 +23,7 @@ Or to only import some issues, run the script and include the issue numbers of a
  $ python3 gh-issues-import.py 25 26 29
 ```
 
-Some config options can be passed as arguments. For a full list, run the script using the `--help` flag.
+Some config options can be passed as arguments. For a full list, see [ARGUMENTS.md](https://github.com/IQAndreas/github-issues-import/blob/docs/ARGUMENTS.md), or run the script using the `--help` flag.
 
 #### Result ####
 
