@@ -1,7 +1,7 @@
 
 ### GitHub Issues Import ###
 
-This Python script allows you to import issues and pull requests from one repository to another (works even if the two repositories are not related to each other).
+This Python script allows you to import issues and pull requests from one repository to another; works even for private repsoitories, and if the two repositories are not related to each other in any way.
 
 Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separated from its original location at [`mokorenkov/tools`](https://github.com/mkorenkov/tools).
 

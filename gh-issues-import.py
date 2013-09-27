@@ -93,8 +93,11 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
-def send_post_request(url, data):
-	req = urllib.request.Request(url, json.dumps(data).encode("utf-8"))
+def send_request(url, post_data=None):
+
+	if (post_data != None):
+		post_data = json.dumps(post_data).encode("utf-8")
+	req = urllib.request.Request(url, post_data)
 	
 	username = config.get('login', 'username')
 	password = config.get('login', 'password')
@@ -107,25 +110,20 @@ def send_post_request(url, data):
 	json_data = response.read()
 	return json.loads(json_data.decode("utf-8"))
 
-def send_get_request(url):
-	response = urllib.request.urlopen(url)
-	json_data = response.read()
-	return json.loads(json_data.decode("utf-8"))
-
 def get_milestones(url):
-	return send_get_request("%s/milestones?state=open" % url)
+	return send_request("%s/milestones?state=open" % url)
 
 def get_labels(url):
-	return send_get_request("%s/labels" % url)
+	return send_request("%s/labels" % url)
 	
 def get_issue_by_id(url, issue_id):
-	return send_get_request("%s/issues/%d" % (url, issue_id))
+	return send_request("%s/issues/%d" % (url, issue_id))
 
 def get_open_issues(url):
 	issues = []
 	page = 1
 	while True:
-		new_issues = send_get_request("%s/issues?state=open&direction=asc&page=%d" % (url, page))
+		new_issues = send_request("%s/issues?state=open&direction=asc&page=%d" % (url, page))
 		if not new_issues:
 			break
 		issues.extend(new_issues)
@@ -134,7 +132,7 @@ def get_open_issues(url):
 
 def get_comments_on_issue(issue):
 	if issue['comments'] != 0:
-		return send_get_request("%s/comments" % issue['url'])
+		return send_request("%s/comments" % issue['url'])
 	else :
 		return []
 
@@ -146,7 +144,7 @@ def import_milestone(source):
 		"due_on": source['due_on']
 	}
 	
-	result_milestone = send_post_request("%s/milestones" % target_url, source)
+	result_milestone = send_request("%s/milestones" % target_url, source)
 	print("Successfully created milestone '%s'" % result_milestone['title'])
 	return result_milestone
 
@@ -156,7 +154,7 @@ def import_label(source):
 		"color": source['color']
 	}
 	
-	result_label = send_post_request("%s/labels" % target_url, source)
+	result_label = send_request("%s/labels" % target_url, source)
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
 
@@ -173,7 +171,7 @@ def import_comments(comments, issue_number):
 		
 		comment['body'] = format_comment(template_data)
 
-		result_comment = send_post_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
+		result_comment = send_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
 		result_comments.append(result_comment)
 		
 	return result_comments
@@ -273,7 +271,7 @@ def import_issues(issues):
 			issue['labels'] = issue_labels
 			del issue['label_objects']
 		
-		result_issue = send_post_request("%s/issues" % target_url, issue)
+		result_issue = send_request("%s/issues" % target_url, issue)
 		print("Successfully created issue '%s'" % result_issue['title'])
 		
 		if 'comments' in issue:
