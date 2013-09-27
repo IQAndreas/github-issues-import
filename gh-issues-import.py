@@ -61,14 +61,21 @@ def init_config():
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
 	
+	
+	# Make sure no required config values are missing
+	if not config.has_option('repository', 'source') :
+		sys.exit("ERROR: There is no source repository specified either in the config file, or as an argument.")
+	if not config.has_option('repository', 'target') :
+		sys.exit("ERROR: There is no target repository specified either in the config file, or as an argument.")
+	
 	# Prompt for username/password if none is provided in either the config or an argument
 	if not config.has_option('login', 'username') :
 		config.set('login', 'username', query.username("Enter your username for GitHub.com: "))
 	if not config.has_option('login', 'password') :
 		config.set('login', 'password', query.password("Enter your password for GitHub.com: "))
 	
-	#TODO: Make sure no config values are missing
 	
+	# Everything is here! Continue on our merry way...
 	global source_url, target_url
 	server = "api.github.com"
 	source_url = "https://%s/repos/%s" % (server, config.get('repository', 'source'))
