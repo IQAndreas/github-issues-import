@@ -29,7 +29,7 @@ def init_config():
 	config.add_section('format')
 	config.add_section('settings')
 	
-	arg_parser = argparse.ArgumentParser()
+	arg_parser = argparse.ArgumentParser(description="Import issues from one GitHub repository into another.")
 	
 	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script.")
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
