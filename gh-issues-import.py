@@ -65,12 +65,27 @@ def init_config():
 		sys.exit("ERROR: There is no source repository specified either in the config file, or as an argument.")
 	if not config.has_option('target', 'repository') :
 		sys.exit("ERROR: There is no target repository specified either in the config file, or as an argument.")
-	
+		
 	# Prompt for username/password if none is provided in either the config or an argument
-	if not config.has_option('login', 'username') :
-		config.set('login', 'username', query.username("Enter your username for GitHub.com: "))
-	if not config.has_option('login', 'password') :
-		config.set('login', 'password', query.password("Enter your password for GitHub.com: "))
+	def get_credentials_for(which):
+		if not config.has_option(which, 'username'):
+			if config.has_option('login', 'username'):
+				config.set(which, 'username', config.get('login', 'username'))
+			elif ( (which == 'target') and query.yes_no("Do you wish to use the same credentials for the target repository?") ):
+				config.set('target', 'username', config.get('source', 'username'))
+			else:
+				config.set(which, 'username', query.username("Enter your username for the %s repository at GitHub.com: " % which))
+		
+		if not config.has_option(which, 'password'):
+			if config.has_option('login', 'password'):
+				config.set(which, 'password', config.get('login', 'password'))
+			elif ( (which == 'target') and config.get('source', 'username') == config.get('target', 'username') ):
+				config.set('target', 'password', config.get('source', 'password'))
+			else:
+				config.set(which, 'password', query.password("Enter your password for the %s repository at GitHub.com: " % which))
+	
+	get_credentials_for('source')
+	get_credentials_for('target')
 	
 	
 	# Everything is here! Continue on our merry way...
@@ -115,8 +130,8 @@ def send_request(which, url, post_data=None):
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
 	req = urllib.request.Request(full_url, post_data)
 	
-	username = config.get('login', 'username')
-	password = config.get('login', 'password')
+	username = config.get(which, 'username')
+	password = config.get(which, 'password')
 	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
 	
 	req.add_header("Content-Type", "application/json")
