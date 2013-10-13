@@ -65,7 +65,25 @@ def init_config():
 		sys.exit("ERROR: There is no source repository specified either in the config file, or as an argument.")
 	if not config.has_option('target', 'repository') :
 		sys.exit("ERROR: There is no target repository specified either in the config file, or as an argument.")
+	
+	
+	def get_server_for(which):
+		# Default to 'github.com' if no server is specified
+		if (not config.has_option(which, 'server')):
+			config.set(which, 'server', "github.com")
 		
+		# if SOURCE server is not github.com, then assume ENTERPRISE github (yourdomain.com/api/v3...)
+		if (config.get(which, 'server') == "github.com") :
+			api_url = "https://api.github.com"
+		else:
+			api_url = "https://%s/api/v3" % config.get(which, 'server')
+		
+		config.set(which, 'url', "%s/repos/%s" % (api_url, config.get(which, 'repository')))
+	
+	get_server_for('source')
+	get_server_for('target')
+	
+	
 	# Prompt for username/password if none is provided in either the config or an argument
 	def get_credentials_for(which):
 		if not config.has_option(which, 'username'):
@@ -74,25 +92,22 @@ def init_config():
 			elif ( (which == 'target') and query.yes_no("Do you wish to use the same credentials for the target repository?") ):
 				config.set('target', 'username', config.get('source', 'username'))
 			else:
-				config.set(which, 'username', query.username("Enter your username for the %s repository at GitHub.com: " % which))
+				query_str = "Enter your username for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server')
+				config.set(which, 'username', query.username(query_str))
 		
 		if not config.has_option(which, 'password'):
 			if config.has_option('login', 'password'):
 				config.set(which, 'password', config.get('login', 'password'))
-			elif ( (which == 'target') and config.get('source', 'username') == config.get('target', 'username') ):
+			elif ( (which == 'target') and config.get('source', 'username') == config.get('target', 'username') and config.get('source', 'server') == config.get('target', 'server') ):
 				config.set('target', 'password', config.get('source', 'password'))
 			else:
-				config.set(which, 'password', query.password("Enter your password for the %s repository at GitHub.com: " % which))
+				query_str = "Enter your password for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server')
+				config.set(which, 'password', query.password(query_str))
 	
 	get_credentials_for('source')
 	get_credentials_for('target')
 	
-	
 	# Everything is here! Continue on our merry way...
-	server = "api.github.com"
-	config.set('source', 'url', "https://%s/repos/%s" % (server, config.get('source', 'repository')))
-	config.set('target', 'url', "https://%s/repos/%s" % (server, config.get('target', 'repository')))
-	
 	return args.issues
 
 def format_date(datestring):
