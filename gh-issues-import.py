@@ -13,9 +13,6 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 default_config_file = os.path.join(__location__, 'config.ini')
 config = configparser.ConfigParser()
 
-source_url = None
-target_url = None
-
 http_error_messages = {}
 http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password are correct, and that you have permission to read from or write to the specified repositories."
 http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
@@ -25,7 +22,8 @@ http_error_messages[404] = "ERROR: Unable to find the specified repository.\nDou
 def init_config():
 	
 	config.add_section('login')
-	config.add_section('repository')
+	config.add_section('source')
+	config.add_section('target')
 	config.add_section('format')
 	config.add_section('settings')
 	
@@ -63,9 +61,9 @@ def init_config():
 	
 	
 	# Make sure no required config values are missing
-	if not config.has_option('repository', 'source') :
+	if not config.has_option('source', 'repository') :
 		sys.exit("ERROR: There is no source repository specified either in the config file, or as an argument.")
-	if not config.has_option('repository', 'target') :
+	if not config.has_option('target', 'repository') :
 		sys.exit("ERROR: There is no target repository specified either in the config file, or as an argument.")
 	
 	# Prompt for username/password if none is provided in either the config or an argument
@@ -76,10 +74,9 @@ def init_config():
 	
 	
 	# Everything is here! Continue on our merry way...
-	global source_url, target_url
 	server = "api.github.com"
-	source_url = "https://%s/repos/%s" % (server, config.get('repository', 'source'))
-	target_url = "https://%s/repos/%s" % (server, config.get('repository', 'target'))
+	config.set('source', 'url', "https://%s/repos/%s" % (server, config.get('source', 'repository')))
+	config.set('target', 'url', "https://%s/repos/%s" % (server, config.get('target', 'repository')))
 	
 	return args.issues
 
@@ -110,11 +107,13 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
-def send_request(url, post_data=None):
+def send_request(which, url, post_data=None):
 
 	if (post_data != None):
 		post_data = json.dumps(post_data).encode("utf-8")
-	req = urllib.request.Request(url, post_data)
+	
+	full_url = "%s/%s" % (config.get(which, 'url'), url)
+	req = urllib.request.Request(full_url, post_data)
 	
 	username = config.get('login', 'username')
 	password = config.get('login', 'password')
@@ -142,29 +141,29 @@ def send_request(url, post_data=None):
 	
 	return json.loads(json_data.decode("utf-8"))
 
-def get_milestones(url):
-	return send_request("%s/milestones?state=open" % url)
+def get_milestones(which):
+	return send_request(which, "milestones?state=open")
 
-def get_labels(url):
-	return send_request("%s/labels" % url)
+def get_labels(which):
+	return send_request(which, "labels")
 	
-def get_issue_by_id(url, issue_id):
-	return send_request("%s/issues/%d" % (url, issue_id))
+def get_issue_by_id(which, issue_id):
+	return send_request(which, "issues/%d" % issue_id)
 
-def get_open_issues(url):
+def get_open_issues(which):
 	issues = []
 	page = 1
 	while True:
-		new_issues = send_request("%s/issues?state=open&direction=asc&page=%d" % (url, page))
+		new_issues = send_request(which, "issues?state=open&direction=asc&page=%d" % page)
 		if not new_issues:
 			break
 		issues.extend(new_issues)
 		page += 1
 	return issues
 
-def get_comments_on_issue(issue):
+def get_comments_on_issue(which, issue):
 	if issue['comments'] != 0:
-		return send_request("%s/comments" % issue['url'])
+		return send_request(which, "issues/%s/comments" % issue['number'])
 	else :
 		return []
 
@@ -176,7 +175,7 @@ def import_milestone(source):
 		"due_on": source['due_on']
 	}
 	
-	result_milestone = send_request("%s/milestones" % target_url, source)
+	result_milestone = send_request('target', "milestones", source)
 	print("Successfully created milestone '%s'" % result_milestone['title'])
 	return result_milestone
 
@@ -186,7 +185,7 @@ def import_label(source):
 		"color": source['color']
 	}
 	
-	result_label = send_request("%s/labels" % target_url, source)
+	result_label = send_request('target', "labels", source)
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
 
@@ -203,7 +202,7 @@ def import_comments(comments, issue_number):
 		
 		comment['body'] = format_comment(template_data)
 
-		result_comment = send_request("%s/issues/%s/comments" % (target_url, issue_number), comment)
+		result_comment = send_request('target', "issues/%s/comments" % issue_number, comment)
 		result_comments.append(result_comment)
 		
 	return result_comments
@@ -211,13 +210,13 @@ def import_comments(comments, issue_number):
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
 def import_issues(issues):
 	
-	known_milestones = get_milestones(target_url)
+	known_milestones = get_milestones('target')
 	def get_milestone_by_title(title):
 		for milestone in known_milestones:
 			if milestone['title'] == title : return milestone
 		return None
 	
-	known_labels = get_labels(target_url)
+	known_labels = get_labels('target')
 	def get_label_by_name(name):
 		for label in known_labels:
 			if label['name'] == name : return label
@@ -235,7 +234,7 @@ def import_issues(issues):
 		
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
-			new_issue['comments'] = get_comments_on_issue(issue)
+			new_issue['comments'] = get_comments_on_issue('source', issue)
 		
 		if config.getboolean('settings', 'import-milestone') and 'milestone' in issue and issue['milestone'] is not None:
 			# Since the milestones' ids are going to differ, we will compare them by title instead
@@ -273,7 +272,7 @@ def import_issues(issues):
 		
 		new_issues.append(new_issue)
 	
-	print("You are about to add to '" + config.get('repository', 'target') + "':")
+	print("You are about to add to '" + config.get('target', 'repository') + "':")
 	print(" *", len(new_issues), "new issues") 
 	print(" *", num_new_comments, "new comments") 
 	print(" *", len(new_milestones), "new milestones") 
@@ -303,7 +302,7 @@ def import_issues(issues):
 			issue['labels'] = issue_labels
 			del issue['label_objects']
 		
-		result_issue = send_request("%s/issues" % target_url, issue)
+		result_issue = send_request('target', "issues", issue)
 		print("Successfully created issue '%s'" % result_issue['title'])
 		
 		if 'comments' in issue:
@@ -318,12 +317,12 @@ def import_some_issues(issue_ids):
 	# Populate issues based on issue IDs
 	issues = []
 	for issue_id in issue_ids:
-		issues.append(get_issue_by_id(source_url, int(issue_id)))
+		issues.append(get_issue_by_id('source', int(issue_id)))
 	
 	return import_issues(issues)
 		
 def import_all_open_issues():
-	issues = get_open_issues(source_url)
+	issues = get_open_issues('source')
 	return import_issues(issues)
 
 
