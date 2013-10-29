@@ -14,13 +14,15 @@ Rename `config.ini.sample` to `config.ini`, and edit the fields to match your lo
 Run the script with the following command to import all open issues into the repository defined in the config:
 
 ```
- $ python3 gh-issues-import.py
+ $ python3 gh-issues-import.py --open
 ```
 
-Or to only import some issues, run the script and include the issue numbers of all issues you wish to import (can be done for one or several issues, and will even include closed issues):
+If you want to import all issues (including the closed ones), use `--all` instead of `--open`. Closed issues will still be open in the target repository, but titles will begin with `[CLOSED]`.
+
+Or to only import specific issues, run the script and include the issue numbers of all issues you wish to import (can be done for one or several issues, and will even include closed issues):
 
 ```
- $ python3 gh-issues-import.py 25 26 29
+ $ python3 gh-issues-import.py --issues 25 26 29
 ```
 
 Some config options can be passed as arguments. For a full list, see [ARGUMENTS.md](https://github.com/IQAndreas/github-issues-import/blob/docs/ARGUMENTS.md), or run the script using the `--help` flag.
