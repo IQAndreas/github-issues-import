@@ -278,6 +278,10 @@ def import_issues(issues):
 		new_issue = {}
 		new_issue['title'] = issue['title']
 		
+		# Temporary fix for marking closed issues
+		if issue['closed_at']:
+			new_issue['title'] = "[CLOSED] " + new_issue['title']
+		
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
 			new_issue['comments'] = get_comments_on_issue('source', issue)
