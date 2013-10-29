@@ -7,7 +7,7 @@ Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separat
 
 #### Usage ####
 
-Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
+Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. _NOTE: If you want to use a different credentials for the source and target repositories, please see the below section for Enterprise Users._ Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
 
 **Warning:** The password is stored in plaintext, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively. If the username or password is not passed in from either of these locations, the user will be prompted for them when the script runs.
  
@@ -24,6 +24,14 @@ Or to only import some issues, run the script and include the issue numbers of a
 ```
 
 Some config options can be passed as arguments. For a full list, see [ARGUMENTS.md](https://github.com/IQAndreas/github-issues-import/blob/docs/ARGUMENTS.md), or run the script using the `--help` flag.
+
+#### Enterprise Users ####
+
+If you are using [GitHub for Enterprise](https://enterprise.github.com/), thanks to the help of [Joshua Rountree](https://github.com/joshuairl), there is support for that. These changes also allow you to specify a different username and password for the source and target repositories, even if both of them are hosted on GitHub.
+
+Use the [`config-enterprise.ini.sample`](config-enterprise.ini.sample) file as a template (renaming it to `config.ini`, or using the `--config <file>` flag) instead of `config.ini.sample`. The command line options `--username` and `--password` do not allow you to specify which repository the credentials apply to, so a config file _must_ be used.
+
+The Enterprise changes should work in theory, but as I do not have such an account, I have not been able to test them myself. If you have tested this and it has worked, let me know. If there are any problems or bugs that still need ironing out, [email me](contact@iqandreas.com) or [open a new issue](https://github.com/IQAndreas/github-issues-import/issues?state=open) with the details.
 
 #### Result ####
 

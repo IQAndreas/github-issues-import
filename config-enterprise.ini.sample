@@ -1,15 +1,17 @@
 # Rename to `config.ini`, and keep it in the same folder as `gh-issues-import.py`
 # All optional fields have been commented out.
 
-[login]
+[source]
+server = github.com
+repository = octocat/Hello-World
 username = user@example.com
 password = naked_password
 
-[source]
-repository = octocat/Hello-World
-
 [target]
+server = helloworld.org
 repository = helloworld-inc/Hello-World
+username = other_user@helloworld.org
+password = naked_password
 
 [format] # These can be adjusted based on your group's region and language.
 
