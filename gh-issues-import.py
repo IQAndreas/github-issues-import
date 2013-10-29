@@ -39,7 +39,11 @@ def init_config():
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
 	
-	arg_parser.add_argument("issues", type=int, nargs='*', help="The list of issues to import. If no issue ID is provided, all open issues will be imported.");
+	include_group = arg_parser.add_mutually_exclusive_group(required=True)
+	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
+	include_group.add_argument("--open", dest='import_open', action='store_true', help="Import only open issues.")
+	include_group.add_argument("--closed", dest='import_closed', action='store_true', help="Import only closed issues.")
+	include_group.add_argument("--issues", type=int, nargs='+', help="The list of issues to import.");
 	
 	args = arg_parser.parse_args()
 	
@@ -58,6 +62,9 @@ def init_config():
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
+	
+	config.set('settings', 'import-open-issues', 	str(args.import_all or args.import_open));
+	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
 	
 	
 	# Make sure no required config values are missing
@@ -92,7 +99,7 @@ def init_config():
 			elif ( (which == 'target') and query.yes_no("Do you wish to use the same credentials for the target repository?") ):
 				config.set('target', 'username', config.get('source', 'username'))
 			else:
-				query_str = "Enter your username for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server')
+				query_str = "Enter your username for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server'))
 				config.set(which, 'username', query.username(query_str))
 		
 		if not config.has_option(which, 'password'):
@@ -101,14 +108,14 @@ def init_config():
 			elif ( (which == 'target') and config.get('source', 'username') == config.get('target', 'username') and config.get('source', 'server') == config.get('target', 'server') ):
 				config.set('target', 'password', config.get('source', 'password'))
 			else:
-				query_str = "Enter your password for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server')
+				query_str = "Enter your password for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server'))
 				config.set(which, 'password', query.password(query_str))
 	
 	get_credentials_for('source')
 	get_credentials_for('target')
 	
 	# Everything is here! Continue on our merry way...
-	return args.issues
+	return args.issues or []
 
 def format_date(datestring):
 	# The date comes from the API in ISO-8601 format
@@ -180,11 +187,20 @@ def get_labels(which):
 def get_issue_by_id(which, issue_id):
 	return send_request(which, "issues/%d" % issue_id)
 
-def get_open_issues(which):
+def get_issues_by_id(which, issue_ids):
+	# Populate issues based on issue IDs
+	issues = []
+	for issue_id in issue_ids:
+		issues.append(get_issue_by_id(which, int(issue_id)))
+	
+	return issues
+
+# Allowed values for state are 'open' and 'closed'
+def get_issues_by_state(which, state):
 	issues = []
 	page = 1
 	while True:
-		new_issues = send_request(which, "issues?state=open&direction=asc&page=%d" % page)
+		new_issues = send_request(which, "issues?state=%s&direction=asc&page=%d" % (state, page))
 		if not new_issues:
 			break
 		issues.extend(new_issues)
@@ -261,6 +277,10 @@ def import_issues(issues):
 		
 		new_issue = {}
 		new_issue['title'] = issue['title']
+		
+		# Temporary fix for marking closed issues
+		if issue['closed_at']:
+			new_issue['title'] = "[CLOSED] " + new_issue['title']
 		
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
@@ -343,26 +363,28 @@ def import_issues(issues):
 
 	return result_issues
 
-def import_some_issues(issue_ids):
-	# Populate issues based on issue IDs
-	issues = []
-	for issue_id in issue_ids:
-		issues.append(get_issue_by_id('source', int(issue_id)))
-	
-	return import_issues(issues)
-		
-def import_all_open_issues():
-	issues = get_open_issues('source')
-	return import_issues(issues)
-
 
 if __name__ == '__main__':
+
+	issue_ids = init_config()	
+	issues = []
 	
-	issue_ids = init_config()
-	
+	# Argparser will prevent us from getting both issue ids and specifying issue state, so no duplicates will be added
 	if (len(issue_ids) > 0):
-		import_some_issues(issue_ids)
-	else:
-		import_all_open_issues()
+		issues += get_issues_by_id(issue_ids)
 	
+	if config.getboolean('settings', 'import-open-issues'):
+		issues += get_issues_by_state('source', 'open')
+	
+	if config.getboolean('settings', 'import-closed-issues'):
+		issues += get_issues_by_state('source', 'closed')
+	
+	# Sort issues based on their original `id` field
+	# Confusing, but taken from http://stackoverflow.com/a/2878123/617937
+	issues.sort(key=lambda x:x['number'])
+	
+	# Finally, actually, add these issues to the target repository
+	import_issues(issues)
+
+
 
