@@ -180,11 +180,12 @@ def get_labels(which):
 def get_issue_by_id(which, issue_id):
 	return send_request(which, "issues/%d" % issue_id)
 
-def get_open_issues(which):
+# Allowed values for state are 'open' and 'closed'
+def get_issues(which, state='open'):
 	issues = []
 	page = 1
 	while True:
-		new_issues = send_request(which, "issues?state=open&direction=asc&page=%d" % page)
+		new_issues = send_request(which, "issues?state=%s&direction=asc&page=%d" % (state, page))
 		if not new_issues:
 			break
 		issues.extend(new_issues)
@@ -352,7 +353,7 @@ def import_some_issues(issue_ids):
 	return import_issues(issues)
 		
 def import_all_open_issues():
-	issues = get_open_issues('source')
+	issues = get_issues('source', 'open')
 	return import_issues(issues)
 
 
