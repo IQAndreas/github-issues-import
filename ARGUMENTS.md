@@ -7,23 +7,32 @@ Import issues from one GitHub repository into another.
 
 ```
 gh-issues-import.py [-h] [--config CONFIG] [-u USERNAME] [-p PASSWORD]
-                         [-s SOURCE] [-t TARGET] [--ignore-comments]
-                         [--ignore-milestone] [--ignore-labels]
-                         [issues [issues ...]]
+                         [-s SOURCE] [-t TARGET]
+                         [--ignore-comments] [--ignore-milestone] [--ignore-labels]
+                         (--all | --open | --closed | --issues ISSUES [ISSUES ...])
 ```
 
-#### Positional arguments:
+#### Required arguments:
+
+At least one of the following is required:
 
 ```
-issues                The list of issues to import. If no issue ID is
-                      provided, all open issues will be imported.
+--all                 Import all issues, regardless of state.
+--open                Import only open issues.
+--closed              Import only closed issues.
+--issues ISSUES [ISSUES ...]
+                      The list of issues to import.
+```
+
+Alternatively, the follwing flag should be used to display the help message and list of arguments, and then exit the program without doing anything.
+
+```
+-h, --help            show this help message and exit
 ```
 
 #### Optional arguments:
 
 ```
--h, --help            show this help message and exit
-
 --config CONFIG       The location of the config file (either absolute, or
                       relative to the current working directory). Defaults
                       to `config.ini` found in the same folder as this
