@@ -83,7 +83,7 @@ def init_config():
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
 	
-	config.set('settings', 'import-open-issues', 	str(args.import_all or args.import_open));
+	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open));
 	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
 	
 	
