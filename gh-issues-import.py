@@ -47,14 +47,28 @@ def init_config():
 	
 	args = arg_parser.parse_args()
 	
-	config_file_name = default_config_file
-	if (args.config): config_file_name = args.config
+	def load_config_file(config_file_name):
+		try:
+			config_file = open(config_file_name)
+			config.read_file(config_file)
+			return True
+		except (FileNotFoundError, IOError):
+			return False
 	
-	try:
-		config_file = open(config_file_name)
-		config.read_file(config_file)
-	except FileNotFoundError:
-		sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name);
+	if (args.config):
+		config_file_name = args.config
+		if (load_config_file(config_file_name)) :
+			print("Loaded config options from '%s'" % config_file_name)
+		else:
+			sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name)
+	else:
+		config_file_name = default_config_file
+		if (load_config_file(config_file_name)) :
+			print("Loaded options from default config file in '%s'" % config_file_name)
+		else:
+			print("Default config file not found in '%s'" % config_file_name)
+			print("You may be prompted for some missing settings.")
+
 	
 	if (args.username): config.set('login', 'username', args.username)
 	if (args.password): config.set('login', 'password', args.password)
