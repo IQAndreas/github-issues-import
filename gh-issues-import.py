@@ -76,6 +76,9 @@ def init_config():
 	if (args.username): config.set('login', 'username', args.username)
 	if (args.password): config.set('login', 'password', args.password)
 	
+	if (args.source): config.set('source', 'repository', args.source)
+	if (args.target): config.set('target', 'repository', args.target)
+	
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
