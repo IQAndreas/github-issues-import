@@ -29,7 +29,7 @@ def init_config():
 	
 	arg_parser = argparse.ArgumentParser(description="Import issues from one GitHub repository into another.")
 	
-	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script.")
+	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script; use `--config none` if you want the script to even ignore the default file.")
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-p', '--password', help="The password (in plaintext) of the account that will create the new issues. The password will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
@@ -57,7 +57,10 @@ def init_config():
 	
 	if (args.config):
 		config_file_name = args.config
-		if (load_config_file(config_file_name)) :
+		if (config_file_name == "none") :
+			print("Ignoring default config file.");
+			print("You may be prompted for some missing settings.")
+		elif (load_config_file(config_file_name)) :
 			print("Loaded config options from '%s'" % config_file_name)
 		else:
 			sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name)
