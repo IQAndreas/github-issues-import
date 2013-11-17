@@ -36,7 +36,8 @@ Alternatively, the follwing flag should be used to display the help message and 
 --config CONFIG       The location of the config file (either absolute, or
                       relative to the current working directory). Defaults
                       to `config.ini` found in the same folder as this
-                      script.
+                      script; use `--config none` if you want the script 
+                      to even ignore the default file.
 
 -u USERNAME, --username USERNAME
                       The username of the account that will create the new
