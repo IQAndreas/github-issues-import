@@ -29,7 +29,7 @@ def init_config():
 	
 	arg_parser = argparse.ArgumentParser(description="Import issues from one GitHub repository into another.")
 	
-	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script.")
+	arg_parser.add_argument('--config', help="The location of the config file (either absolute, or relative to the current working directory). Defaults to `config.ini` found in the same folder as this script; use `--config none` if you want the script to even ignore the default file.")
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-p', '--password', help="The password (in plaintext) of the account that will create the new issues. The password will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
@@ -47,14 +47,31 @@ def init_config():
 	
 	args = arg_parser.parse_args()
 	
-	config_file_name = default_config_file
-	if (args.config): config_file_name = args.config
+	def load_config_file(config_file_name):
+		try:
+			config_file = open(config_file_name)
+			config.read_file(config_file)
+			return True
+		except (FileNotFoundError, IOError):
+			return False
 	
-	try:
-		config_file = open(config_file_name)
-		config.read_file(config_file)
-	except FileNotFoundError:
-		sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name);
+	if (args.config):
+		config_file_name = args.config
+		if (config_file_name == "none") :
+			print("Ignoring default config file.");
+			print("You may be prompted for some missing settings.")
+		elif (load_config_file(config_file_name)) :
+			print("Loaded config options from '%s'" % config_file_name)
+		else:
+			sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name)
+	else:
+		config_file_name = default_config_file
+		if (load_config_file(config_file_name)) :
+			print("Loaded options from default config file in '%s'" % config_file_name)
+		else:
+			print("Default config file not found in '%s'" % config_file_name)
+			print("You may be prompted for some missing settings.")
+
 	
 	if (args.username): config.set('login', 'username', args.username)
 	if (args.password): config.set('login', 'password', args.password)
