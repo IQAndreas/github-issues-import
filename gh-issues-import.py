@@ -13,6 +13,19 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 default_config_file = os.path.join(__location__, 'config.ini')
 config = configparser.ConfigParser()
 
+class state:
+	current = 0
+	INITIALIZING = 1
+	LOADING_CONFIG = 2
+	FETCHING_ISSUES = 3
+	GENERATING_MILESTONES = 4; 	GENERATING_LABELS = 5; 	GENERATING_ISSUES = 6;
+	IMPORT_CONFIRMATION = 7
+	IMPORTING_MILESTONES = 8; 	IMPORTING_LABELS = 9; 	IMPORTING_ISSUES = 10;
+	IMPORT_COMPLETE = 11;
+	COMPLETE = 12;
+	
+state.current = state.INITIALIZING
+
 http_error_messages = {}
 http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password are correct, and that you have permission to read from or write to the specified repositories."
 http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
@@ -277,12 +290,16 @@ def import_comments(comments, issue_number):
 
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
 def import_issues(issues):
+
+	state.current = state.GENERATING_MILESTONES
 	
 	known_milestones = get_milestones('target')
 	def get_milestone_by_title(title):
 		for milestone in known_milestones:
 			if milestone['title'] == title : return milestone
 		return None
+	
+	state.current = state.GENERATING_LABELS
 	
 	known_labels = get_labels('target')
 	def get_label_by_name(name):
@@ -294,6 +311,8 @@ def import_issues(issues):
 	num_new_comments = 0
 	new_milestones = []
 	new_labels = []
+	
+	state.current = state.GENERATING_ISSUES
 	
 	for issue in issues:
 		
@@ -344,6 +363,8 @@ def import_issues(issues):
 		
 		new_issues.append(new_issue)
 	
+	state.current = state.IMPORT_CONFIRMATION
+	
 	print("You are about to add to '" + config.get('target', 'repository') + "':")
 	print(" *", len(new_issues), "new issues") 
 	print(" *", num_new_comments, "new comments") 
@@ -352,13 +373,19 @@ def import_issues(issues):
 	if not query.yes_no("Are you sure you wish to continue?"):
 		sys.exit()
 	
+	state.current = state.IMPORTING_MILESTONES
+	
 	for milestone in new_milestones:
 		result_milestone = import_milestone(milestone)
 		milestone['number'] = result_milestone['number']
 		milestone['url'] = result_milestone['url']
 	
+	state.current = state.IMPORTING_LABELS
+	
 	for label in new_labels:
 		result_label = import_label(label)
+	
+	state.current = state.IMPORTING_ISSUES
 	
 	result_issues = []
 	for issue in new_issues:
@@ -382,14 +409,20 @@ def import_issues(issues):
 			print(" > Successfully added", len(result_comments), "comments.")
 		
 		result_issues.append(result_issue)
-
+	
+	state.current = state.IMPORT_COMPLETE
+	
 	return result_issues
 
 
 if __name__ == '__main__':
-
+	
+	state.current = state.LOADING_CONFIG
+	
 	issue_ids = init_config()	
 	issues = []
+	
+	state.current = state.FETCHING_ISSUES
 	
 	# Argparser will prevent us from getting both issue ids and specifying issue state, so no duplicates will be added
 	if (len(issue_ids) > 0):
@@ -405,8 +438,10 @@ if __name__ == '__main__':
 	# Confusing, but taken from http://stackoverflow.com/a/2878123/617937
 	issues.sort(key=lambda x:x['number'])
 	
+	# Further states defined within the function
 	# Finally, actually, add these issues to the target repository
 	import_issues(issues)
-
+	
+	state.current = state.COMPLETE
 
 
