@@ -14,15 +14,15 @@ default_config_file = os.path.join(__location__, 'config.ini')
 config = configparser.ConfigParser()
 
 class state:
-	current = 0
-	INITIALIZING = 1
-	LOADING_CONFIG = 2
-	FETCHING_ISSUES = 3
-	GENERATING_MILESTONES = 4; 	GENERATING_LABELS = 5; 	GENERATING_ISSUES = 6;
-	IMPORT_CONFIRMATION = 7
-	IMPORTING_MILESTONES = 8; 	IMPORTING_LABELS = 9; 	IMPORTING_ISSUES = 10;
-	IMPORT_COMPLETE = 11;
-	COMPLETE = 12;
+	current = ""
+	INITIALIZING         = "script-initializing"
+	LOADING_CONFIG       = "loading-config"
+	FETCHING_ISSUES      = "fetching-issues"
+	GENERATING           = "generating"
+	IMPORT_CONFIRMATION  = "import-confirmation"
+	IMPORTING            = "importing"
+	IMPORT_COMPLETE      = "import-complete"
+	COMPLETE             = "script-complete"
 	
 state.current = state.INITIALIZING
 
@@ -291,15 +291,13 @@ def import_comments(comments, issue_number):
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
 def import_issues(issues):
 
-	state.current = state.GENERATING_MILESTONES
+	state.current = state.GENERATING
 	
 	known_milestones = get_milestones('target')
 	def get_milestone_by_title(title):
 		for milestone in known_milestones:
 			if milestone['title'] == title : return milestone
 		return None
-	
-	state.current = state.GENERATING_LABELS
 	
 	known_labels = get_labels('target')
 	def get_label_by_name(name):
@@ -311,8 +309,6 @@ def import_issues(issues):
 	num_new_comments = 0
 	new_milestones = []
 	new_labels = []
-	
-	state.current = state.GENERATING_ISSUES
 	
 	for issue in issues:
 		
@@ -373,19 +369,15 @@ def import_issues(issues):
 	if not query.yes_no("Are you sure you wish to continue?"):
 		sys.exit()
 	
-	state.current = state.IMPORTING_MILESTONES
+	state.current = state.IMPORTING
 	
 	for milestone in new_milestones:
 		result_milestone = import_milestone(milestone)
 		milestone['number'] = result_milestone['number']
 		milestone['url'] = result_milestone['url']
 	
-	state.current = state.IMPORTING_LABELS
-	
 	for label in new_labels:
 		result_label = import_label(label)
-	
-	state.current = state.IMPORTING_ISSUES
 	
 	result_issues = []
 	for issue in new_issues:
