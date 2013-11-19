@@ -71,28 +71,28 @@ def init_config():
 		except (FileNotFoundError, IOError):
 			return False
 	
-	if (args.no_config) :
+	if args.no_config:
 		print("Ignoring default config file. You may be prompted for some missing settings.")
-	elif (args.config):
+	elif args.config:
 		config_file_name = args.config
-		if (load_config_file(config_file_name)) :
+		if load_config_file(config_file_name):
 			print("Loaded config options from '%s'" % config_file_name)
 		else:
 			sys.exit("ERROR: Unable to find or open config file '%s'" % config_file_name)
 	else:
 		config_file_name = default_config_file
-		if (load_config_file(config_file_name)) :
+		if load_config_file(config_file_name):
 			print("Loaded options from default config file in '%s'" % config_file_name)
 		else:
 			print("Default config file not found in '%s'" % config_file_name)
 			print("You may be prompted for some missing settings.")
 
 	
-	if (args.username): config.set('login', 'username', args.username)
-	if (args.password): config.set('login', 'password', args.password)
+	if args.username: config.set('login', 'username', args.username)
+	if args.password: config.set('login', 'password', args.password)
 	
-	if (args.source): config.set('source', 'repository', args.source)
-	if (args.target): config.set('target', 'repository', args.target)
+	if args.source: config.set('source', 'repository', args.source)
+	if args.target: config.set('target', 'repository', args.target)
 	
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
@@ -181,7 +181,7 @@ def format_comment(template_data):
 
 def send_request(which, url, post_data=None):
 
-	if (post_data != None):
+	if post_data is not None:
 		post_data = json.dumps(post_data).encode("utf-8")
 	
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
@@ -202,12 +202,12 @@ def send_request(which, url, post_data=None):
 		
 		error_details = error.read();
 		error_details = json.loads(error_details.decode("utf-8"))
-		print(error_details)
-		if (error.code in http_error_messages):
+		
+		if error.code in http_error_messages:
 			sys.exit(http_error_messages[error.code])
 		else:
 			error_message = "ERROR: There was a problem importing the issues.\n%s %s" % (error.code, error.reason)
-			if ('message' in error_details):
+			if 'message' in error_details:
 				error_message += "\nDETAILS: " + error_details['message']
 			sys.exit(error_message)
 	
@@ -431,7 +431,7 @@ if __name__ == '__main__':
 	issues.sort(key=lambda x:x['number'])
 	
 	# Further states defined within the function
-	# Finally, actually, add these issues to the target repository
+	# Finally, add these issues to the target repository
 	import_issues(issues)
 	
 	state.current = state.COMPLETE
