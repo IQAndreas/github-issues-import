@@ -12,6 +12,7 @@ import query
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 default_config_file = os.path.join(__location__, 'config.ini')
 config = configparser.ConfigParser()
+token = ""
 
 class state:
 	current = ""
@@ -24,16 +25,18 @@ class state:
 	IMPORT_COMPLETE      = "import-complete"
 	COMPLETE             = "script-complete"
 	
+	
 state.current = state.INITIALIZING
 
 http_error_messages = {}
-http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password are correct, and that you have permission to read from or write to the specified repositories."
+http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your Github Token or username and password are correct, and that you have permission to read from or write to the specified repositories."
 http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
 http_error_messages[404] = "ERROR: Unable to find the specified repository.\nDouble check the spelling for the source and target repositories. If either repository is private, make sure the specified user is allowed access to it."
 
 
 def init_config():
-	
+
+	global token
 	config.add_section('login')
 	config.add_section('source')
 	config.add_section('target')
@@ -89,6 +92,7 @@ def init_config():
 
 	
 	if args.username: config.set('login', 'username', args.username)
+	if "GITHUB_CLI_TOKEN" in os.environ: token = os.environ["GITHUB_CLI_TOKEN"]
 	if args.password: config.set('login', 'password', args.password)
 	
 	if args.source: config.set('source', 'repository', args.source)
@@ -137,6 +141,14 @@ def init_config():
 				query_str = "Enter your username for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server'))
 				config.set(which, 'username', query.username(query_str))
 		
+		global token
+		# if token is defined in config, overwrite environment variable
+		if not config.has_option(which, 'token'):
+			if config.has_option('login', 'token'):
+				config.set(which, 'token', config.get('login', 'token'))
+				print("Using Github CLI token %s" % token)
+
+
 		if not config.has_option(which, 'password'):
 			if config.has_option('login', 'password'):
 				config.set(which, 'password', config.get('login', 'password'))
@@ -180,7 +192,8 @@ def format_comment(template_data):
 	return format_from_template(template, template_data)
 
 def send_request(which, url, post_data=None):
-
+	global token
+	
 	if post_data is not None:
 		post_data = json.dumps(post_data).encode("utf-8")
 	
@@ -189,6 +202,8 @@ def send_request(which, url, post_data=None):
 	
 	username = config.get(which, 'username')
 	password = config.get(which, 'password')
+	if token:
+		password = token
 	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
 	
 	req.add_header("Content-Type", "application/json")

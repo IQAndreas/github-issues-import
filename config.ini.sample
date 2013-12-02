@@ -4,6 +4,7 @@
 [login]
 username = user@example.com
 password = naked_password
+token = 214d9a215af1a3278d9fcba4cac89566e321e4cf
 
 [source]
 repository = octocat/Hello-World
