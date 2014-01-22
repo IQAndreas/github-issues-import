@@ -59,8 +59,8 @@ def init_config():
 	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
 	include_group.add_argument("--open", dest='import_open', action='store_true', help="Import only open issues.")
 	include_group.add_argument("--closed", dest='import_closed', action='store_true', help="Import only closed issues.")
-	include_group.add_argument("--issues", type=int, nargs='+', help="The list of issues to import.");
-	
+	include_group.add_argument("-i", "--issues", type=int, nargs='+', help="The list of issues to import.");
+
 	args = arg_parser.parse_args()
 	
 	def load_config_file(config_file_name):
