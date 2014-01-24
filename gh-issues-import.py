@@ -11,7 +11,7 @@ import query
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 default_config_file = os.path.join(__location__, 'config.ini')
-config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
 
 class state:
 	current = ""
