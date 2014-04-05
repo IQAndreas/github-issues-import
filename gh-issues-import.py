@@ -55,9 +55,9 @@ def init_config():
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
 	
-	arg_parser.add_argument('--template-issue', help="Specify a template file for use with issues.")
-	arg_parser.add_argument('--template-comment', help="Specify a template file for use with comments.")
-	arg_parser.add_argument('--template-pull-request', help="Specify a template file for use with pull requests.")
+	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
+	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
+	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
 		
 	include_group = arg_parser.add_mutually_exclusive_group(required=True)
 	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
@@ -98,9 +98,9 @@ def init_config():
 	if args.source: config.set('source', 'repository', args.source)
 	if args.target: config.set('target', 'repository', args.target)
 	
-	if args.template_issue: config.set('format', 'issue_template', args.template_issue)
-	if args.template_comment: config.set('format', 'comment_template', args.template_comment)
-	if args.template_pull_request: config.set('format', 'pull_request_template', args.template_pull_request)
+	if args.issue_template: config.set('format', 'issue_template', args.issue_template)
+	if args.comment_template: config.set('format', 'comment_template', args.comment_template)
+	if args.pull_request_template: config.set('format', 'pull_request_template', args.pull_request_template)
 	
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
