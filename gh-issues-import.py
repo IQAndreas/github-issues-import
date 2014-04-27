@@ -283,12 +283,12 @@ def import_comments(comments, issue_number):
 	for comment in comments:
 	
 		template_data = {}
-		template_data['comment_creator_username'] = comment['user']['login']
-		template_data['comment_creator_url'] = comment['user']['html_url']
-		template_data['comment_creator_avatar'] = comment['user']['avatar_url']
-		template_data['comment_date'] = format_date(comment['created_at'])
-		template_data['comment_url'] =  comment['html_url']
-		template_data['comment_body'] = comment['body']
+		template_data['user_name'] = comment['user']['login']
+		template_data['user_url'] = comment['user']['html_url']
+		template_data['user_avatar'] = comment['user']['avatar_url']
+		template_data['date'] = format_date(comment['created_at'])
+		template_data['url'] =  comment['html_url']
+		template_data['body'] = comment['body']
 		
 		comment['body'] = format_comment(template_data)
 
@@ -355,12 +355,12 @@ def import_issues(issues):
 					new_labels.append(issue_label)   # Put it in a queue to add it later
 		
 		template_data = {}
-		template_data['issue_creator_username'] = issue['user']['login']
-		template_data['issue_creator_url'] = issue['user']['html_url']
-		template_data['issue_creator_avatar'] = issue['user']['avatar_url']
-		template_data['issue_date'] = format_date(issue['created_at'])
-		template_data['issue_url'] =  issue['html_url']
-		template_data['issue_body'] = issue['body']
+		template_data['user_name'] = issue['user']['login']
+		template_data['user_url'] = issue['user']['html_url']
+		template_data['user_avatar'] = issue['user']['avatar_url']
+		template_data['date'] = format_date(issue['created_at'])
+		template_data['url'] =  issue['html_url']
+		template_data['body'] = issue['body']
 		
 		if "pull_request" in issue and issue['pull_request']['html_url'] is not None:
 			new_issue['body'] = format_pull_request(template_data)
