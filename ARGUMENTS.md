@@ -1,4 +1,3 @@
-
 ###GitHub Issues Import
 
 Import issues from one GitHub repository into another.
@@ -36,7 +35,7 @@ Alternatively, the follwing flag should be used to display the help message and 
 --config CONFIG       The location of the config file (either absolute, or
                       relative to the current working directory). Defaults
                       to `config.ini` found in the same folder as this
-                      script; use `--config none` if you want the script 
+                      script; use `--no-config` if you want the script 
                       to even ignore the default file.
 
 -u USERNAME, --username USERNAME
