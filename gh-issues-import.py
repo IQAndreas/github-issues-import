@@ -285,6 +285,7 @@ def import_comments(comments, issue_number):
 		template_data = {}
 		template_data['comment_creator_username'] = comment['user']['login']
 		template_data['comment_creator_url'] = comment['user']['html_url']
+		template_data['comment_creator_avatar'] = comment['user']['avatar_url']
 		template_data['comment_date'] = format_date(comment['created_at'])
 		template_data['comment_url'] =  comment['html_url']
 		template_data['comment_body'] = comment['body']
@@ -356,6 +357,7 @@ def import_issues(issues):
 		template_data = {}
 		template_data['issue_creator_username'] = issue['user']['login']
 		template_data['issue_creator_url'] = issue['user']['html_url']
+		template_data['issue_creator_avatar'] = issue['user']['avatar_url']
 		template_data['issue_date'] = format_date(issue['created_at'])
 		template_data['issue_url'] =  issue['html_url']
 		template_data['issue_body'] = issue['body']
