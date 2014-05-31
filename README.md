@@ -33,8 +33,6 @@ If you are using [GitHub for Enterprise](https://enterprise.github.com/), thanks
 
 Use the [`config-enterprise.ini.sample`](config-enterprise.ini.sample) file as a template (renaming it to `config.ini`, or using the `--config <file>` flag). The command line options `--username` and `--password` do not allow you to specify which repository the credentials apply to, so unless you use the same credentials for both servers, a config file _must_ be used.
 
-The Enterprise changes should work in theory, but as I do not have such an account, I have not been able to test them myself. If you have tested this and it has worked, let me know. If there are any problems or bugs that still need ironing out, [email me](mailto:contact@iqandreas.com) or [open a new issue](https://github.com/IQAndreas/github-issues-import/issues?state=open) with the details.
-
 #### Result ####
 
 Every issue imported will create a new issue in the target repository. Remember that the ID of the issue in the new repository will most likely not be the same as the ID of the original issue. Keep this in mind when writing commit messages such as _"Closes #25"_.
