@@ -53,10 +53,10 @@ The script will by default use the [Markdown-formatted](http://github.github.com
 
 #### Examples ####
 
-![Example result of an imported pull request](https://raw.github.com/IQAndreas/github-issues-import/docs/example-imported-issue.png)
+[![Example result of an imported pull request](http://www.iqandreas.com/github-issues-import/example-imported-issue.png)](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8)
 
-* [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/1) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
-* [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/2) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))
-* [**Example issue with comments**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/3) ([original](https://github.com/IQAndreas/github-issues-import/issues/3))
-* [**Example issue with milestone**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/24) ([original](https://github.com/IQAndreas/github-issues-import/issues/9))
+* [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
+* [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/9) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))
+* [**Example issue with comments**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/10) ([original](https://github.com/IQAndreas/github-issues-import/issues/3))
+* [**Example issue with milestone**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/11) ([original](https://github.com/IQAndreas/github-issues-import/issues/9))
 
