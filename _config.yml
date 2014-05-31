@@ -4,12 +4,12 @@
 
 name: Andreas Renberg (IQAndreas)
 author: Andreas Renberg (IQAndreas)
-url: 'http://static.iqandreas.com'
+url: 'https://github.com/IQAndreas/gh-pages-template'
 
 title: "GitHub Pages Jekyll Template"
 subtitle: "Avoiding repeated code across all my GitHub Pages"
 
-github_url: https://github.com/IQAndreas/gh-pages-template
+github_url: https://github.com/IQAndreas/gh-pages-template/tree/gh-pages-minimal
 github_username: IQAndreas
 
 #copyright_message: &copy;&nbsp;2013 by Andreas&nbsp;Renberg
@@ -51,7 +51,7 @@ source_url: 'https://github.com/IQAndreas/gh-pages-template/tree/gh-pages'
 destination: _public
 plugins: 	 _plugins
 
-exclude: [LICENSE.md, update.sh, init-docs.sh]
+exclude: [LICENSE.md, update.sh]
 
 relative_permalinks: false
 markdown: redcarpet
