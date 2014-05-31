@@ -2,23 +2,61 @@
 layout: slate
 permalink: index.html
 ---
-### What is this place?
 
-Don't you just hate it when you have several [GitHub pages](http://pages.github.com/) for your projects that are all supposed to share the same layout, then you go and tweak the layout a bit, forcing you to update the changes and rebuild every single project page?
+This Python script allows you to import issues and pull requests from one repository to another; works even for private repositories, and if the two repositories are not related to each other in any way.
 
-Since you cannot inherit [Jekyll](http://jekyllrb.com/) projects from another project, this at least helps soften the blow.
+Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separated from its original location at [`mokorenkov/tools`](https://github.com/mkorenkov/tools).
 
-The CSS, JavaScript, and images are all stored here (and accessed via absolute URLs [[1]](https://github.com/IQAndreas/gh-pages-template/blob/gh-pages/_includes/imports/stylesheets.html) [[2]](http://static.iqandreas.com/assets/stylesheets/slate/main.css)), so if you update them once, the changes will propagate to all pages that use them. The changes to `_layouts`, `_includes`, and `_plugins` are only a `git merge` away from being updated in (but this is still very manual, and annoying, and needs to be done for every single project you want the change applied to).
+#### Usage ####
 
-### This isn't the best solution
+Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. _NOTE: If you want to use a different credentials for the source and target repositories, please see the below section for Enterprise Users._ Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
 
-GitHub staff (and/or Jekyll authors), if you are reading this, please let us allow Jekyll projects/GitHub Pages to inherit from other other projects, so if the "parent" updates, all children that are affected rebuild. _Alas, I imagine this may be taxing on the GitHub Pages build servers, but at least I can dream this feature will one day be added._
+**Warning:** The password is stored in plain-text, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively. If the username or password is not passed in from either of these locations, the user will be prompted for them when the script runs.
+ 
+Run the script with the following command to import all open issues into the repository defined in the config:
 
-### Credits
+```
+ $ python3 gh-issues-import.py --open
+```
 
-This project is generously hosted by [GitHub Pages](http://pages.github.com/), and powered by [Jekyll](http://jekyllrb.com/).
+If you want to import all issues (including the closed ones), use `--all` instead of `--open`. Closed issues will still be open in the target repository, but titles will begin with `[CLOSED]`.
 
-The site design is a modified version of Slate by [Jason Costello](http://twitter.com/jsncostello).
+Or to only import specific issues, run the script and include the issue numbers of all issues you wish to import (can be done for one or several issues, and will even include closed issues):
 
-Unless otherwise indicated, everything else on this site (including images, code, and content) is owned by [Andreas Renberg](mailto:contact@iqandreas.com) and made available under [{{ site.github_license }}]({{site.github_license_url}}).
+```
+ $ python3 gh-issues-import.py --issues 25 26 29
+```
+
+Some config options can be passed as arguments. For a full list, see [ARGUMENTS.md](https://github.com/IQAndreas/github-issues-import/blob/docs/ARGUMENTS.md), or run the script using the `--help` flag.
+
+#### Enterprise Users ####
+
+If you are using [GitHub for Enterprise](https://enterprise.github.com/), thanks to the help of [Joshua Rountree](https://github.com/joshuairl), there is support for that. These changes also allow you to specify a different username and password for the source and target repositories, even if both of them are hosted on GitHub.
+
+Use the [`config-enterprise.ini.sample`](config-enterprise.ini.sample) file as a template (renaming it to `config.ini`, or using the `--config <file>` flag). The command line options `--username` and `--password` do not allow you to specify which repository the credentials apply to, so unless you use the same credentials for both servers, a config file _must_ be used.
+
+#### Result ####
+
+Every issue imported will create a new issue in the target repository. Remember that the ID of the issue in the new repository will most likely not be the same as the ID of the original issue. Keep this in mind when writing commit messages such as _"Closes #25"_.
+
+If the issue is a pull request, this will be indicated on the issue, and a link to the code will be provided. However, it will be treated as a new issue in the target repository, and **not** a pull request. Pulling in the suggested code into the repository will need to be done manually.
+
+Any comments on the issue will be imported, however, the author of all imported comments will be the account specified in the config. Instead, a link and header is provided for each comment indicating who the original author was and the original date and time of the comment. Any subsequent comments added to the issue after it has been imported into the target repository will not be included.
+
+Labels and milestones attached to the issue will be imported and added to the target repository if they do not already exist there. If the label or milestone with the same name already exists, the issue will point to the existing one, and any difference in the description or other details will be ignored.
+
+If allowed by GitHub's policies, it may be a good idea to use a "neutral" account to import the issues and issue comments to avoid imported comments from getting mixed up with developer comments (example: [FlixelCommunityBot](https://github.com/FlixelCommunityBot?tab=activity)).
+
+#### Templates ####
+
+The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`](templates/) directory. You can edit those, or point to your own templates from the config file.
+
+#### Examples ####
+
+![Example result of an imported pull request](https://raw.github.com/IQAndreas/github-issues-import/docs/example-imported-issue.png)
+
+* [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/1) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
+* [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/2) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))
+* [**Example issue with comments**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/3) ([original](https://github.com/IQAndreas/github-issues-import/issues/3))
+* [**Example issue with milestone**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/24) ([original](https://github.com/IQAndreas/github-issues-import/issues/9))
 

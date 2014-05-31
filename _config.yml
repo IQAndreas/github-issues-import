@@ -4,15 +4,15 @@
 
 name: Andreas Renberg (IQAndreas)
 author: Andreas Renberg (IQAndreas)
-url: 'https://github.com/IQAndreas/gh-pages-template'
+url: 'https://github.com/IQAndreas/github-issues-import'
 
-title: "GitHub Pages Jekyll Template"
-subtitle: "Avoiding repeated code across all my GitHub Pages"
+title: "GitHub Issues Importer"
+subtitle: "Python script to import issues from one repository into another, either one at a time or all of them at once"
 
-github_url: https://github.com/IQAndreas/gh-pages-template/tree/gh-pages-minimal
+github_url: https://github.com/IQAndreas/github-issues-import/
 github_username: IQAndreas
 
-#copyright_message: &copy;&nbsp;2013 by Andreas&nbsp;Renberg
+#copyright_message: &copy;&nbsp;2014 by Andreas&nbsp;Renberg
 github_license: The MIT License
 github_license_url: https://github.com/IQAndreas/markdown-licenses/blob/master/mit.md
 
@@ -40,8 +40,8 @@ global_fonts:       http://static.iqandreas.com/assets/fonts
 google_analytics_id:   UA-44446017-1
 google_analytics_name: iqandreas.com
 
-source_title_prefix: "GitHub: IQAndreas/gh-pages-template"
-source_url: 'https://github.com/IQAndreas/gh-pages-template/tree/gh-pages'
+source_title_prefix: "GitHub: IQAndreas/github-issues-import"
+source_url: 'https://github.com/IQAndreas/github-issues-import/tree/gh-pages'
 
 # ----------------------- #
 #     Jekyll Configs      #
