@@ -1,0 +1,41 @@
+/*******************************************************************************
+Modifications to the Slate Theme by Jason Costello
+for tutorial pages (should extend the "minimalist" version).
+*******************************************************************************/
+
+.next {
+	text-align: right;
+}
+
+/* Code blocks */
+div.highlight {
+	padding: 20px;
+}
+#tutorial_content pre {
+	padding: 0px;
+}
+#tutorial_content code {
+	margin: 5px;
+}
+
+/* Images, video, and examples (including canvas results) */
+#tutorial_content img, #tutorial_content video, #tutorial_content .flash-video, #tutorial_content .tutorial-example {
+	/* SIZE */
+	padding: 0px;
+	margin: 20px;
+	width: auto;
+	max-width: 100%;
+	height: auto;
+	
+	/* STYLE */
+	border-radius: 0.3em;
+	box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.15);
+	-moz-box-sizing: border-box;
+	border: 0.5em solid rgb(255, 255, 255);
+}
+
+#tutorial_content .tutorial-example {
+	background-color: #FFFFFF;
+	display: inline-block;
+}
+

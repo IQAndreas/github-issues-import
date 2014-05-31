@@ -1,0 +1,12 @@
+---
+layout: slate
+---
+<h3>If you can read this, you are doing it wrong</h3>
+
+<p>Well, not wrong, but there is an easier way to view these files:</p>
+
+{% comment %}I hate hard-coding things like this, but I see no way to pass a site variable to an `includes` (sadface)
+Also, blindly assume it's hosted on GitHub.com. If they want to change it, they can do so manually.{% endcomment %}
+<li class="flink github_com"><a href="{{ site.source_url }}/{{ page.path }}">{{ site.source_title_prefix }}/{{ page.path }}</a></li>
+
+{% include snippets/back title="Back to main page" %}

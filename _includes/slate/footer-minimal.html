@@ -1,0 +1,7 @@
+<p>
+{% if site.copyright_message %}
+	<span class="copyright">{{ site.copyright_message }}</span>
+{% elsif site.github_license %}
+	<span class="license">Released under <a ref="license" href="{% if site.github_license_url %}{{ site.github_license_url }}{% else %}{{ site.github_url }}/blob/master/LICENSE.md{% endif %}">{{ site.github_license }}</a></span>
+{% endif %}
+</p>

@@ -1,0 +1,1 @@
+<a rel="{% if include.rel %}{{ include.rel }}{% else %}prev{% endif %}" href="{{ include.url }}" class="prev"><span class="prev-icon">{% if include.icon %}{{ include.icon }}{% else %}&larr;{% endif %}</span> {% if include.title %}{{ include.title }}{% else %}Previous{% endif %}</a>

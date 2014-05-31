@@ -1,0 +1,1 @@
+<a rel="{% if include.rel %}{{ include.rel }}{% else %}next{% endif %}" href="{{ include.url }}" class="next">{% if include.title %}{{ include.title }}{% else %}Next{% endif %} <span class="next-icon">{% if include.icon %}{{ include.icon }}{% else %}&rarr;{% endif %}</span></a>

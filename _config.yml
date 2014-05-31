@@ -1,0 +1,59 @@
+# ----------------------- #
+#     Site Variables      #
+# ----------------------- #
+
+name: Andreas Renberg (IQAndreas)
+author: Andreas Renberg (IQAndreas)
+url: 'http://static.iqandreas.com'
+
+title: "GitHub Pages Jekyll Template"
+subtitle: "Avoiding repeated code across all my GitHub Pages"
+
+github_url: https://github.com/IQAndreas/gh-pages-template
+github_username: IQAndreas
+
+#copyright_message: &copy;&nbsp;2013 by Andreas&nbsp;Renberg
+github_license: The MIT License
+github_license_url: https://github.com/IQAndreas/markdown-licenses/blob/master/mit.md
+
+
+# ----------------------- #
+#       Site Paths        #
+# ----------------------- #
+
+# LOCAL
+stylesheets: /assets/stylesheets
+javascripts: /assets/javascripts
+images:      /assets/images
+fonts:       /assets/fonts
+
+# GLOBAL
+global_stylesheets: http://static.iqandreas.com/assets/stylesheets
+global_javascripts: http://static.iqandreas.com/assets/javascripts
+global_images:      http://static.iqandreas.com/assets/images
+global_fonts:       http://static.iqandreas.com/assets/fonts
+
+# ----------------------- #
+#     Plugin Configs      #
+# ----------------------- #
+
+google_analytics_id:   UA-44446017-1
+google_analytics_name: iqandreas.com
+
+source_title_prefix: "GitHub: IQAndreas/gh-pages-template"
+source_url: 'https://github.com/IQAndreas/gh-pages-template/tree/gh-pages'
+
+# ----------------------- #
+#     Jekyll Configs      #
+# ----------------------- #
+
+#source: source
+destination: _public
+plugins: 	 _plugins
+
+exclude: [LICENSE.md, update.sh, init-docs.sh]
+
+relative_permalinks: false
+markdown: redcarpet
+pygments: true
+

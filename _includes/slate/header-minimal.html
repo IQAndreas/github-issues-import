@@ -1,0 +1,8 @@
+<div id="titles">
+	<h1 id="page_small_title">{% if page.displayed_title %}{{ page.displayed_title }}{% else %}{{ page.title }}{% endif %}</h1>
+	{% if page.subtitle %}<div id="page_small_subtitle">{{ page.subtitle }}</div>{% endif %}
+</div>
+
+{% if page.source_url %}
+<a id="view_source_banner" href="{{ page.source_url }}">View source</a>
+{% endif %}

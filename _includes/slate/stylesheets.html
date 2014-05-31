@@ -1,0 +1,9 @@
+<!-- Styles for the Slate theme by by Jason Costello (@jsncostello) -->
+{% include css global="slate/main.css" %}
+{% include css global="slate/custom.css" %}
+{% include css global="slate/floating-menu.css" %}
+{% if page.minimal %}
+	{% include css global="slate/minimal.css" %}
+{% else %}
+	{% if site.github_url %}{% include css global="slate/github-project.css" %}{% endif %}
+{% endif %}

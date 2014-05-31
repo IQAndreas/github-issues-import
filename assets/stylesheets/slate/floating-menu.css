@@ -1,0 +1,66 @@
+/*******************************************************************************
+Modifications to the Slate Theme by Jason Costello
+for floating menus
+*******************************************************************************/
+
+.floating-menu {
+	width:150px;
+	z-index:100;
+	padding: 15px;
+	margin: 10px;
+
+	/* Wikipedia style * 
+	border:1px solid #AAAAAA;
+	/**/
+	
+	/* "Pop-out" style */
+	background: #FFFFFF;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+	/**/
+}
+
+/* REGULAR */
+.floating-menu.left  {
+	float: left;
+	position:absolute;
+	margin: 0px;
+	left: -215px;
+}
+.floating-menu.right {
+	float: right;
+	position:absolute;
+	margin: 0px;
+	right: -215px;
+}
+
+/* NARROW SCREENS */
+@media screen and (max-width: 480px) {
+	.floating-menu.left  {
+		float: left;
+		margin-right: 30px;
+	}
+	.floating-menu.right {
+		float: right;
+		margin-left: 30px;
+	}
+}
+
+/* CONTENTS */
+
+.floating-menu h3 {
+	font-size: 18px;
+	text-align: center;
+	margin: 0px;
+}
+.floating-menu ul, .floating-menu ol, .floating-menu menu {
+	margin: 0px;
+	padding: 0px;
+}
+.floating-menu li {
+	font-size: 14px;
+	padding-left: 0px;
+}
+
+/*.floating-menu a, .floating-menu h3 {display:block;margin:0 0.5em;}*/
+
+

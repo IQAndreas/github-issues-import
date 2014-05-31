@@ -1,0 +1,1 @@
+<li class="flink {{ include.site | replace: '.', '_' }}"><a {% if include.rel %}rel="{{ include.rel }}"{% endif %} href="{{ include.url }}">{{ include.title }}</a></li>

@@ -1,0 +1,11 @@
+{% if site.github_url %}
+	<p><a href="{{ site.github_url }}">{{ site.title }}</a> is an open source project<br/>
+	maintained by <a rel="author" href="https://github.com/{{ site.github_username }}">{{ site.github_username }}</a> 
+	{% if site.copyright_message %}
+		<span class="copyright">{{ site.copyright_message }}</span>
+	{% elsif site.github_license %}
+		and <span class="license">released under <a ref="license" href="{% if site.github_license_url %}{{ site.github_license_url }}{% else %}{{ site.github_url }}/blob/master/LICENSE.md{% endif %}">{{ site.github_license }}</a></span>
+	{% endif %}
+	</p>
+{% endif %}
+<p>This site was published with <a href="http://pages.github.com">GitHub Pages</a>{% if site.source_url %} (<a href="{{ site.source_url }}">view the source</a>){% endif %}</p>

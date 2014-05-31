@@ -1,0 +1,10 @@
+
+a.more, a.back, a.next, a.prev {
+	font-style: italic;
+	display: block;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	padding-left: 50px;
+	width: 100%;
+}
+

@@ -1,0 +1,7 @@
+{% if page.redirect %}<div id="redirect">
+{% if page.redirect_message %}
+	{{ page.redirect_message }}
+{% else %}
+	This page has moved to <a href="{{ page.redirect }}">{{ page.redirect }}</a>
+{% endif %}
+</div>{% endif %}

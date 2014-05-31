@@ -1,0 +1,24 @@
+---
+style: blank
+---
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8' />
+		{% include redirect/head.html %}
+
+		<title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
+		
+		{% include layouts/frontmatter_meta.html %}
+		
+		<!-- STYLESHEETS AND FONTS -->
+		{% include layouts/frontmatter_stylesheets.html %}
+		
+		<!-- JAVASCRIPTS -->
+		{% include layouts/frontmatter_javascripts.html %}
+	</head>
+	<body>
+		{% include redirect/body.html %}
+		{{ content }}
+	</body>
+</html>

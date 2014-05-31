@@ -1,0 +1,53 @@
+---
+style: slate
+---
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset='utf-8' />
+		{% include redirect/head.html %}
+
+		<title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>		
+		
+		{% include imports/meta.html %}
+		{% include layouts/frontmatter_meta.html %}
+		
+		<!-- STYLESHEETS AND FONTS -->
+		{% include imports/fonts.html %}
+		{% include imports/stylesheets.html %}
+		{% include layouts/frontmatter_stylesheets.html %}
+		
+		<!-- JAVASCRIPTS -->
+		{% include imports/javascripts.html %}
+		{% include layouts/frontmatter_javascripts.html %}
+	</head>
+
+	<body>
+
+		<!-- HEADER -->
+		<div id="header_wrap" class="outer">
+			<header class="inner">
+				{% if page.minimal %} {% include slate/header-minimal.html %}
+				{% else %} {% include slate/header.html %} {% endif %}
+			</header>
+		</div>
+
+		<!-- MAIN CONTENT -->
+		<div id="main_content_wrap" class="outer">
+			{% include redirect/body.html %}
+			<section id="main_content" class="inner">
+				{{ content }}
+			</section>
+		</div>
+
+		<!-- FOOTER	-->
+		<div id="footer_wrap" class="outer">
+			<footer class="inner">
+				{% if page.minimal %} {% include slate/footer-minimal.html %}
+				{% else %} {% include slate/footer.html %} {% endif %}
+			</footer>
+		</div>
+
+	</body>
+</html>

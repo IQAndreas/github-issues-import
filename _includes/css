@@ -1,0 +1,1 @@
+<link rel="stylesheet" type="text/css" {% if include.media %}media="{{ include.media }}"{% endif %} href="{% if include.url %}{{ include.url }}{% elsif include.global %}{{ site.global_stylesheets }}/{{ include.global }}{% else %}{{ site.stylesheets }}/{{ include.local }}{% endif %}" />
