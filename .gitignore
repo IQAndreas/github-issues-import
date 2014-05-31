@@ -1,4 +1,7 @@
 .idea/*
 __pycache__/*
 *.py~
+
+# This is to prevent you from making the idiotic mistake of committing and uploading your
+# config file that includes your password in plaintext into a publicly avaialable repo!
 config.ini
