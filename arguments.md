@@ -1,7 +1,8 @@
 ---
 layout: slate
 permalink: arguments/index.html
-title: Arguments
+title: Command Line Arguments
+subtitle: Command Line Arguments
 ---
 
 ### Usage
