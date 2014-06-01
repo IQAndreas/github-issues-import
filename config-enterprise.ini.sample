@@ -1,25 +1,19 @@
 # Rename to `config.ini`, and keep it in the same folder as `gh-issues-import.py`
-# All optional fields have been commented out.
+# For a full list of options, see <http://www.iqandreas.com/github-issues-import/configuration/>
 
 [source]
 server = github.com
-repository = octocat/Hello-World
-username = user@example.com
-password = naked_password
+repository = OctoCat/Hello-World
+username = octocat@github.com
+password = plaintext_pa$$w0rd
 
 [target]
-server = helloworld.org
-repository = helloworld-inc/Hello-World
-username = other_user@helloworld.org
-password = naked_password
+server = octodog.org
+repository = OctoDog/Hello-World
+username = admin@octodog.org
+password = plaintext_pass\/\/ord
 
 [format] # These can be adjusted based on your group's region and language.
-
-# Unless an absolute path is given, the templates are relative to the current working directory.
-# Example (and default) templates can be found in the `templates` folder.
-#issue_template =        templates/issue.md
-#pull_request_template = templates/pull_request.md
-#comment_template =      templates/comment.md
 
 # If unsure, just using '%c' will default to the locale’s appropriate date and time representation.
 #date = %A %b %d, %Y at %H:%M GMT # Sample: Friday Sep 13, 2013 at 22:58 GMT
