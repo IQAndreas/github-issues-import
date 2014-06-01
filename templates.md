@@ -7,7 +7,7 @@ subtitle: Custom Templates
 
 The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`]({{site.github_url}}/tree/master/templates/) directory for importing issues, pull requests, and comments. These are written in US English, and contain some fancy formatting including links to the GitHub profile and Gravatar images for the person who originally authored the issue or comment.
 
-Here you can see examples of how those default templates render:
+Here you can see examples of how those default templates are rendered when issues are imported:
 
 {% include example-imported-issues.md %}
 
@@ -15,7 +15,7 @@ Here you can see examples of how those default templates render:
 
 If you would like, you can make changes to the existing templates, or create your own from scratch. Issues and comments posted to GitHub [support Markdown](https://help.github.com/articles/github-flavored-markdown) and some HTML.
 
-The following illustrates a very simple template for comments (you look at the default templates included with the library for more advanced examples):
+The following illustrates a very simple template for comments (look at the default templates included with the library for more advanced examples):
 
 ```
 **Comment by [${user_name}](${user_url})** _${date}_
