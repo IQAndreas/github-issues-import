@@ -39,7 +39,7 @@ Alternatively, the follwing flag should be used to display the help message and 
 
 ### <a id="optional-arguments"></a> Optional arguments
 
-For examples of config files, see [`config.ini.sample`](https://github.com/IQAndreas/github-issues-import/blob/master/config.ini.sample) or [`config-enterprise.ini.sample`](https://github.com/IQAndreas/github-issues-import/blob/master/config-enterprise.ini.sample) in the main repository.
+See [_Configuration Options_]({{site.url}}/configuration/) for more details.
 
 ```
 --config CONFIG       The location of the config file (either absolute, or
@@ -54,7 +54,7 @@ For examples of config files, see [`config.ini.sample`](https://github.com/IQAnd
 
 #### <a id="authentication"></a> Authentication
 
-Note that if you want to use a different username/password combination for the source and target repositories, please use a config file instead.
+Note that if you want to use a different username/password combination for the source and target repositories, please [use a config file instead]({{site.url}}/configuration/). 
 
 ```
 -u USERNAME, --username USERNAME
@@ -73,13 +73,19 @@ Note that if you want to use a different username/password combination for the s
                       copied to. Should be in the format `user/repository`.
 ```
 
-#### <a id="other-options"></a> Other options
+#### <a id="import-options"></a> Import options
 
 ```
 --ignore-comments     Do not import comments in the issue.
 --ignore-milestone    Do not import the milestone attached to the issue.
 --ignore-labels       Do not import labels attached to the issue.
+```
 
+#### <a id="custom-templates"></a> Custom Templates
+
+See [_Custom Templates_]({{site.url}}/templates/) for more details.
+
+```
 --issue-template ISSUE_TEMPLATE
                       Specify a template file for use with issues.
 --comment-template COMMENT_TEMPLATE

@@ -8,9 +8,9 @@ Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separat
 
 #### Usage ####
 
-The script will by default look for a file named `config.ini` located in the same folder as the Python script. For a list of all possible configuration options, see [Configuration]({{site.url}}/configuration/).
+The script will by default look for a file named `config.ini` located in the same folder as the Python script. For a list of all possible configuration options, see [_Configuration Options_]({{site.url}}/configuration/).
 
-To quickly get started, rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. If you want to use a different credentials for the source and target repositories, please see [Configuration: Enterprise Accounts and Advanced Login Options]({{site.url}}/configuration/#enterprise). Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
+To quickly get started, rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. If you want to use a different credentials for the source and target repositories, please see [_Configuration Options: Enterprise Accounts and Advanced Login Options_]({{site.url}}/configuration/#enterprise). Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
 
 **Warning:** The password is stored in plain-text, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively. If the username or password is not passed in from either of these locations, the user will be prompted for them when the script runs.
  
@@ -44,14 +44,9 @@ If allowed by GitHub's policies, it may be a good idea to use a "neutral" accoun
 
 #### Templates ####
 
-The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`]({{site.github_url}}/tree/master/templates/) directory. You can edit those, or point to your own templates from the config file.
+The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`]({{site.github_url}}/tree/master/templates/) directory. You can edit those, or point to your own templates from the config file; see [_Custom Templates_]({{site.url}}/templates/) for more details.
 
 #### Examples ####
 
-[![Example result of an imported pull request]({{site.url}}/example-imported-issue.png)](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8)
-
-* [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
-* [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/9) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))
-* [**Example issue with comments**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/10) ([original](https://github.com/IQAndreas/github-issues-import/issues/3))
-* [**Example issue with milestone**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/11) ([original](https://github.com/IQAndreas/github-issues-import/issues/9))
+{% include example-imported-issues.md %}
 

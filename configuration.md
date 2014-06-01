@@ -75,7 +75,7 @@ If you are unsure of what format to use, just setting the date format to `%c` wi
 
 ### <a id="custom-templates"></a> Custom templates
 
-In the `[format]` section you can also define the location of any custom templates; see [_Templates_]({{ site.url }}/templates) for more details on how to create your own templates. 
+In the `[format]` section you can also define the location of any templates (and by default will use the templates found in this project's `templates` directory). Unless an absolute path is given, the templates are relative to the current working directory.
 
 ```
 [format]
@@ -84,5 +84,6 @@ pull_request_template = templates/pull_request.md
 comment_template =      templates/comment.md
 ```
 
-Unless an absolute path is given, the templates are relative to the current working directory.
+See [_Custom Templates_]({{ site.url }}/templates) for more details if you would like to create your own templates. 
+
 
