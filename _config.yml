@@ -4,7 +4,7 @@
 
 name: Andreas Renberg (IQAndreas)
 author: Andreas Renberg (IQAndreas)
-url: 'https://github.com/IQAndreas/github-issues-import'
+url: 'http://www.iqandreas.com/github-issues-import/'
 
 title: "GitHub Issues Importer"
 subtitle: "Python script to import issues from one repository into another, either one at a time or all of them at once"
