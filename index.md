@@ -1,15 +1,16 @@
 ---
 layout: slate
-permalink: index.html
 ---
 
-This Python script allows you to import issues and pull requests from one repository to another; works even for private repositories, and if the two repositories are not related to each other in any way.
+This Python script allows you to import issues and pull requests from one repository to another; works even for private repositories, enterprise accounts, and if the two repositories are not related to each other in any way.
 
 Fork of one of the tools by [Max Korenkov](https://github.com/mkorenkov) separated from its original location at [`mokorenkov/tools`](https://github.com/mkorenkov/tools).
 
 #### Usage ####
 
-Rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. _NOTE: If you want to use a different credentials for the source and target repositories, please see the below section for Enterprise Users._ Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
+The script will by default look for a file named `config.ini` located in the same folder as the Python script. For a list of all possible configuration options, see [Configuration]({{site.url}}/configuration/).
+
+To quickly get started, rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. If you want to use a different credentials for the source and target repositories, please see [Configuration: Enterprise Accounts and Advanced Login Options]({{site.url}}/configuration/#enterprise). Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
 
 **Warning:** The password is stored in plain-text, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively. If the username or password is not passed in from either of these locations, the user will be prompted for them when the script runs.
  
@@ -27,13 +28,7 @@ Or to only import specific issues, run the script and include the issue numbers 
  $ python3 gh-issues-import.py --issues 25 26 29
 ```
 
-Some config options can be passed as arguments. For a full list, see [the the _Arguments_ page](http://www.iqandreas.com/github-issues-import/arguments/), or run the script using the `--help` flag.
-
-#### Enterprise Users ####
-
-If you are using [GitHub for Enterprise](https://enterprise.github.com/), thanks to the help of [Joshua Rountree](https://github.com/joshuairl), there is support for that. These changes also allow you to specify a different username and password for the source and target repositories, even if both of them are hosted on GitHub.
-
-Use the [`config-enterprise.ini.sample`](config-enterprise.ini.sample) file as a template (renaming it to `config.ini`, or using the `--config <file>` flag). The command line options `--username` and `--password` do not allow you to specify which repository the credentials apply to, so unless you use the same credentials for both servers, a config file _must_ be used.
+Some config options can be passed as arguments. For a full list, see [the the _Arguments_ page]({{site.url}}/arguments/), or run the script using the `--help` flag.
 
 #### Result ####
 
@@ -49,11 +44,11 @@ If allowed by GitHub's policies, it may be a good idea to use a "neutral" accoun
 
 #### Templates ####
 
-The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`](templates/) directory. You can edit those, or point to your own templates from the config file.
+The script will by default use the [Markdown-formatted](http://github.github.com/github-flavored-markdown/) templates found in the [`templates`]({{site.github_url}}/tree/master/templates/) directory. You can edit those, or point to your own templates from the config file.
 
 #### Examples ####
 
-[![Example result of an imported pull request](http://www.iqandreas.com/github-issues-import/example-imported-issue.png)](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8)
+[![Example result of an imported pull request]({{site.url}}/example-imported-issue.png)](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8)
 
 * [**Example issue (with label)**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/8) ([original](https://github.com/IQAndreas/github-issues-import/issues/1))
 * [**Example pull request**](https://github.com/IQAndreas-testprojects/github-issues-import-example/issues/9) ([original](https://github.com/IQAndreas/github-issues-import/issues/2))

@@ -5,7 +5,7 @@ title: Command Line Arguments
 subtitle: Command Line Arguments
 ---
 
-### Usage
+### <a id="usage"></a> Usage
 
 ```
 gh-issues-import.py [-h] [--help]
@@ -19,7 +19,7 @@ gh-issues-import.py [-h] [--help]
                     [--pull-request-template PULL_REQUEST_TEMPLATE]
 ```
 
-### Required arguments
+### <a id="required-arguments"></a> Required arguments
 
 At least one of the following is required:
 
@@ -37,7 +37,7 @@ Alternatively, the follwing flag should be used to display the help message and 
 -h, --help            show this help message and exit
 ```
 
-### Optional arguments
+### <a id="optional-arguments"></a> Optional arguments
 
 For examples of config files, see [`config.ini.sample`](https://github.com/IQAndreas/github-issues-import/blob/master/config.ini.sample) or [`config-enterprise.ini.sample`](https://github.com/IQAndreas/github-issues-import/blob/master/config-enterprise.ini.sample) in the main repository.
 
@@ -52,7 +52,7 @@ For examples of config files, see [`config.ini.sample`](https://github.com/IQAnd
                       requested from the user as a prompt.
 ```
 
-#### Authentication
+#### <a id="authentication"></a> Authentication
 
 Note that if you want to use a different username/password combination for the source and target repositories, please use a config file instead.
 
@@ -73,7 +73,7 @@ Note that if you want to use a different username/password combination for the s
                       copied to. Should be in the format `user/repository`.
 ```
 
-#### Other options
+#### <a id="other-options"></a> Other options
 
 ```
 --ignore-comments     Do not import comments in the issue.
