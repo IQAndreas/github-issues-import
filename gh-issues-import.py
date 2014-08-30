@@ -202,22 +202,27 @@ def send_request(which, url, post_data=None):
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
 	req.add_header("User-Agent", "IQAndreas/github-issues-import")
-	
-	try:
-		response = urllib.request.urlopen(req)
-		json_data = response.read()
-	except urllib.error.HTTPError as error:
-		
-		error_details = error.read();
-		error_details = json.loads(error_details.decode("utf-8"))
-		
-		if error.code in http_error_messages:
-			sys.exit(http_error_messages[error.code])
-		else:
-			error_message = "ERROR: There was a problem importing the issues.\n%s %s" % (error.code, error.reason)
-			if 'message' in error_details:
-				error_message += "\nDETAILS: " + error_details['message']
-			sys.exit(error_message)
+
+	retry = True
+	while retry:
+		retry = False
+		try:
+			response = urllib.request.urlopen(req)
+			json_data = response.read()
+		except urllib.error.HTTPError as error:
+
+			error_details = error.read();
+			error_details = json.loads(error_details.decode("utf-8"))
+
+			if error.code in http_error_messages:
+				sys.exit(http_error_messages[error.code])
+			else:
+				error_message = "ERROR: There was a problem importing the issues.\n%s %s" % (error.code, error.reason)
+				if 'message' in error_details:
+					error_message += "\nDETAILS: " + error_details['message']
+				sys.exit(error_message)
+		except urllib.error.URLError as error:
+			retry = True
 	
 	return json.loads(json_data.decode("utf-8"))
 
