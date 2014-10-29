@@ -4,6 +4,7 @@
 [login]
 username = OctoDog
 password = plaintext_pa$$w0rd
+token = api_access_token
 
 [source]
 repository = OctoCat/Hello-World
