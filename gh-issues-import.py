@@ -39,7 +39,8 @@ def init_config():
 	config.add_section('target')
 	config.add_section('format')
 	config.add_section('settings')
-	
+	config.add_section('filter')
+
 	arg_parser = argparse.ArgumentParser(description="Import issues from one GitHub repository into another.")
 	
 	config_group = arg_parser.add_mutually_exclusive_group(required=False)
@@ -54,7 +55,10 @@ def init_config():
 	arg_parser.add_argument('--ignore-comments',  dest='ignore_comments',  action='store_true', help="Do not import comments in the issue.")		
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
-	
+	arg_parser.add_argument('--ignore-pullrequests',    dest='ignore_pullrequests',    action='store_true', help="Do not import issues that are pull requests.")
+
+	arg_parser.add_argument('--filter-labels',    dest='filter_labels', help="Comma separated values of labels to use as filters.")
+
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
 	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
@@ -242,11 +246,17 @@ def get_issues_by_id(which, issue_ids):
 def get_issues_by_state(which, state):
 	issues = []
 	page = 1
+	import_pullrequests = config.getboolean('settings', 'import-pullrequests')
+	default_labels = ''
+	labels = config.get('filter', 'labels', fallback=default_labels)
 	while True:
-		new_issues = send_request(which, "issues?state=%s&direction=asc&page=%d" % (state, page))
+		new_issues = send_request(which, "issues?state=%s&direction=asc&page=%d&labels=%s" % (state, page, labels))
 		if not new_issues:
 			break
-		issues.extend(new_issues)
+		if import_pullrequests:
+			issues.extend(new_issues)
+		else:
+			issues.extend(filter(lambda issue:'pull_request' not in issue ,new_issues))
 		page += 1
 	return issues
 
