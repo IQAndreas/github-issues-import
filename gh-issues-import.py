@@ -48,6 +48,7 @@ def init_config():
 	
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-p', '--password', help="The password (in plaintext) of the account that will create the new issues. The password will not be stored anywhere if passed in as an argument.")
+	arg_parser.add_argument('-o', '--token', help="The oauth token of the account that will create the new issues.")
 	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
 	arg_parser.add_argument('-t', '--target', help="The destination repository which the issues should be copied to. Should be in the format `user/repository`.")
 	
@@ -94,6 +95,7 @@ def init_config():
 	
 	if args.username: config.set('login', 'username', args.username)
 	if args.password: config.set('login', 'password', args.password)
+	if args.token: config.set('login', 'token', args.token)
 	
 	if args.source: config.set('source', 'repository', args.source)
 	if args.target: config.set('target', 'repository', args.target)
@@ -150,9 +152,13 @@ def init_config():
 				config.set(which, 'password', config.get('login', 'password'))
 			elif ( (which == 'target') and config.get('source', 'username') == config.get('target', 'username') and config.get('source', 'server') == config.get('target', 'server') ):
 				config.set('target', 'password', config.get('source', 'password'))
-			else:
+			elif not config.has_option(which, 'token'):
 				query_str = "Enter your password for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server'))
 				config.set(which, 'password', query.password(query_str))
+
+		if not config.has_option(which, 'token'):
+			if config.has_option('login', 'token'):
+				config.set(which, 'token', config.get('login', 'token'))
 	
 	get_credentials_for('source')
 	get_credentials_for('target')
@@ -196,8 +202,18 @@ def send_request(which, url, post_data=None):
 	req = urllib.request.Request(full_url, post_data)
 	
 	username = config.get(which, 'username')
-	password = config.get(which, 'password')
-	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
+	use_password_auth = config.has_option(which, 'password')
+	use_token_auth = config.has_option(which, 'token')
+	if use_password_auth:
+		password = config.get(which, 'password')
+		req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
+	elif use_token_auth:
+		token = config.get(which, 'token')
+		req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(token.encode("utf-8") + b":x-oauth-basic"))
+		pass
+	else:
+		error_message = "Could not authenticate the requests to github. Please supply a password or oauth token."
+		sys.exit(error_message)
 	
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
