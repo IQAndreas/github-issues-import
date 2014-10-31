@@ -187,13 +187,13 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
-def send_request(which, url, post_data=None):
+def send_request(which, url, post_data=None, method=None):
 
 	if post_data is not None:
 		post_data = json.dumps(post_data).encode("utf-8")
 	
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
-	req = urllib.request.Request(full_url, post_data)
+	req = urllib.request.Request(full_url, post_data, method=method)
 	
 	username = config.get(which, 'username')
 	password = config.get(which, 'password')
@@ -324,9 +324,8 @@ def import_issues(issues):
 		new_issue = {}
 		new_issue['title'] = issue['title']
 		
-		# Temporary fix for marking closed issues
 		if issue['closed_at']:
-			new_issue['title'] = "[CLOSED] " + new_issue['title']
+			new_issue['state'] = 'closed'
 		
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
@@ -404,7 +403,14 @@ def import_issues(issues):
 			del issue['label_objects']
 		
 		result_issue = send_request('target', "issues", issue)
-		print("Successfully created issue '%s'" % result_issue['title'])
+		if 'state' in issue and issue['state'] == 'closed':
+			result_issue['state'] = 'closed'
+			result_issue = send_request('target', "issues/%s" % result_issue['number'],
+						    result_issue,
+						    method='PATCH')
+			print("Successfully created and closed issue '%s'" % result_issue['title'])
+		else:
+			print("Successfully created issue '%s'" % result_issue['title'])
 		
 		if 'comments' in issue:
 			result_comments = import_comments(issue['comments'], result_issue['number'])		
