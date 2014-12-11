@@ -354,6 +354,9 @@ def import_issues(issues):
 					known_labels.append(issue_label) # Allow it to be found next time
 					new_labels.append(issue_label)   # Put it in a queue to add it later
 		
+		if issue['assignee'] and issue['assignee']['login']:
+			new_issue['assignee'] = issue['assignee']['login']
+
 		template_data = {}
 		template_data['user_name'] = issue['user']['login']
 		template_data['user_url'] = issue['user']['html_url']
