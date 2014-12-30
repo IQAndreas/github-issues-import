@@ -27,7 +27,7 @@ class state:
 state.current = state.INITIALIZING
 
 http_error_messages = {}
-http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password are correct, and that you have permission to read from or write to the specified repositories."
+http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password or oauthtoken are correct, and that you have permission to read from or write to the specified repositories."
 http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
 http_error_messages[404] = "ERROR: Unable to find the specified repository.\nDouble check the spelling for the source and target repositories. If either repository is private, make sure the specified user is allowed access to it."
 
@@ -48,6 +48,7 @@ def init_config():
 
 	arg_parser.add_argument('-u', '--username', help="The username of the account that will create the new issues. The username will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-p', '--password', help="The password (in plaintext) of the account that will create the new issues. The password will not be stored anywhere if passed in as an argument.")
+	arg_parser.add_argument('-o', '--oauthtoken', help="The GitHub OAuth token to use to authenticate and create the new issues. It will not be stored anywhere if passed in as an argument.")
 	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
 	arg_parser.add_argument('-t', '--target', help="The destination repository which the issues should be copied to. Should be in the format `user/repository`.")
 
@@ -95,6 +96,7 @@ def init_config():
 
 	if args.username: config.set('login', 'username', args.username)
 	if args.password: config.set('login', 'password', args.password)
+	if args.oauthtoken: config.set('login', 'oauthtoken', args.oauthtoken)
 
 	if args.source: config.set('source', 'repository', args.source)
 	if args.target: config.set('target', 'repository', args.target)
@@ -138,6 +140,11 @@ def init_config():
 
 	# Prompt for username/password if none is provided in either the config or an argument
 	def get_credentials_for(which):
+		if config.has_option(which, 'oauthtoken'):
+			return
+		if config.has_option('login', 'oauthtoken'):
+			config.set(which, 'oauthtoken', config.get('login', 'oauthtoken'))
+			return
 		if not config.has_option(which, 'username'):
 			if config.has_option('login', 'username'):
 				config.set(which, 'username', config.get('login', 'username'))
@@ -199,9 +206,12 @@ def send_request(which, url, post_data=None):
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
 	req = urllib.request.Request(full_url, json_data)
 
-	username = config.get(which, 'username')
-	password = config.get(which, 'password')
-	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
+	if config.has_option(which, 'oauthtoken'):
+		req.add_header("Authorization", b"bearer " + config.get(which, 'oauthtoken').encode('utf-8'))
+	if config.has_option(which, 'username'):
+		username = config.get(which, 'username')
+		password = config.get(which, 'password')
+		req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
 
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
