@@ -15,7 +15,7 @@ def password(question):
 def yes_no(question, default=True):
     choices = {"yes":True, "y":True, "ye":True,
                "no":False, "n":False }
-    
+
     if default == None:
         prompt = " [y/n] "
     elif default == True:
