@@ -51,6 +51,7 @@ def init_config():
 	arg_parser.add_argument('-s', '--source', help="The source repository which the issues should be copied from. Should be in the format `user/repository`.")
 	arg_parser.add_argument('-t', '--target', help="The destination repository which the issues should be copied to. Should be in the format `user/repository`.")
 
+	arg_parser.add_argument('-n', '--dry-run',    dest='dry_run',          action='store_true', help="Don't actually create anything, just print what's going to be done.")
 	arg_parser.add_argument('--ignore-comments',  dest='ignore_comments',  action='store_true', help="Do not import comments in the issue.")
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
@@ -102,6 +103,7 @@ def init_config():
 	if args.comment_template: config.set('format', 'comment_template', args.comment_template)
 	if args.pull_request_template: config.set('format', 'pull_request_template', args.pull_request_template)
 
+	config.set('settings', 'dry-run',          str(args.dry_run))
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
@@ -189,11 +191,13 @@ def format_comment(template_data):
 
 def send_request(which, url, post_data=None):
 
-	if post_data is not None:
-		post_data = json.dumps(post_data).encode("utf-8")
+	if post_data is None:
+		json_data = None
+	else:
+		json_data = json.dumps(post_data).encode("utf-8")
 
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
-	req = urllib.request.Request(full_url, post_data)
+	req = urllib.request.Request(full_url, json_data)
 
 	username = config.get(which, 'username')
 	password = config.get(which, 'password')
@@ -202,6 +206,11 @@ def send_request(which, url, post_data=None):
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
 	req.add_header("User-Agent", "IQAndreas/github-issues-import")
+
+	if post_data is not None and config.getboolean('settings', 'dry-run'):
+		post_data['number'] = post_data.get('number', 0)
+		print("dry-run:", verb.upper(), full_url)
+		return post_data
 
 	try:
 		response = urllib.request.urlopen(req)
