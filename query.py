@@ -13,6 +13,10 @@ def password(question):
 # Taken from http://code.activestate.com/recipes/577058-query-yesno/
 #  with some personal modifications
 def yes_no(question, default=True):
+    # Assume the default if we can't ask (not in a tty)
+    if not sys.stdin.isatty():
+        return default
+
     choices = {"yes":True, "y":True, "ye":True,
                "no":False, "n":False }
 
