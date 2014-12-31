@@ -242,7 +242,7 @@ def send_request(which, url, verb='get', post_data=None):
 	return json.loads(json_data.decode("utf-8"))
 
 def get_milestones(which):
-	return send_request(which, "milestones?state=open")
+	return send_request(which, "milestones?state=all")
 
 def get_labels(which):
 	return send_request(which, "labels")
