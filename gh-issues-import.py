@@ -196,7 +196,7 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
-def send_request(which, url, post_data=None):
+def send_request(which, url, verb='get', post_data=None):
 
 	if post_data is None:
 		json_data = None
@@ -216,8 +216,9 @@ def send_request(which, url, post_data=None):
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
 	req.add_header("User-Agent", "IQAndreas/github-issues-import")
+	req.get_method = lambda: verb.upper()
 
-	if post_data is not None and config.getboolean('settings', 'dry-run'):
+	if verb.upper() not in ('HEAD', 'GET') and config.getboolean('settings', 'dry-run'):
 		post_data['number'] = post_data.get('number', 0)
 		print("dry-run:", verb.upper(), full_url)
 		return post_data
@@ -276,12 +277,12 @@ def get_comments_on_issue(which, issue):
 		return []
 
 def import_milestone(source):
-	result_milestone = send_request('target', "milestones", source)
+	result_milestone = send_request('target', "milestones", 'post', source)
 	print("Successfully created milestone '%s'" % result_milestone['title'])
 	return result_milestone
 
 def import_label(source):
-	result_label = send_request('target', "labels", source)
+	result_label = send_request('target', "labels", 'post', source)
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
 
@@ -299,7 +300,7 @@ def import_comments(comments, issue_number):
 
 		comment['body'] = format_comment(template_data)
 
-		result_comment = send_request('target', "issues/%s/comments" % issue_number, comment)
+		result_comment = send_request('target', "issues/%s/comments" % issue_number, 'post', comment)
 		result_comments.append(result_comment)
 
 	return result_comments
@@ -410,7 +411,7 @@ def import_issues(issues):
 			issue['labels'] = issue_labels
 			del issue['label_objects']
 
-		result_issue = send_request('target', "issues", issue)
+		result_issue = send_request('target', "issues", 'post', issue)
 		print("Successfully created issue '%s'" % result_issue['title'])
 
 		if 'comments' in issue:
