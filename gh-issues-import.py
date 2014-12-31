@@ -53,12 +53,14 @@ def init_config():
 	arg_parser.add_argument('-t', '--target', help="The destination repository which the issues should be copied to. Should be in the format `user/repository`.")
 
 	arg_parser.add_argument('-n', '--dry-run',    dest='dry_run',          action='store_true', help="Don't actually create anything, just print what's going to be done.")
+	arg_parser.add_argument('-m', '--move-issues',dest='move_issues',      action='store_true', help="Move the issues instead of copying (close the original if it was open and add a comment saying the issue was moved.")
 	arg_parser.add_argument('--ignore-comments',  dest='ignore_comments',  action='store_true', help="Do not import comments in the issue.")
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
 
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
+	arg_parser.add_argument('--moved-comment-template', help="Specify a template file for use when moving issues.")
 	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
 
 	include_group = arg_parser.add_mutually_exclusive_group(required=True)
@@ -104,11 +106,13 @@ def init_config():
 	if args.issue_template: config.set('format', 'issue_template', args.issue_template)
 	if args.comment_template: config.set('format', 'comment_template', args.comment_template)
 	if args.pull_request_template: config.set('format', 'pull_request_template', args.pull_request_template)
+	if args.moved_comment_template: config.set('format', 'moved_comment_template', args.moved_comment_template)
 
 	config.set('settings', 'dry-run',          str(args.dry_run))
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
+	config.set('settings', 'move-issues',      str(args.move_issues))
 
 	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open));
 	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
@@ -196,6 +200,11 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
+def format_moved_comment(template_data):
+	default_template = os.path.join(__location__, 'templates', 'moved_comment.md')
+	template = config.get('format', 'moved_comment_template', fallback=default_template)
+	return format_from_template(template, template_data)
+
 def send_request(which, url, verb='get', post_data=None):
 
 	if post_data is None:
@@ -220,6 +229,8 @@ def send_request(which, url, verb='get', post_data=None):
 
 	if verb.upper() not in ('HEAD', 'GET') and config.getboolean('settings', 'dry-run'):
 		post_data['number'] = post_data.get('number', 0)
+		post_data['url'] = '<dry-run>'
+		post_data['html_url'] = '<dry-run>'
 		print("dry-run:", verb.upper(), full_url)
 		return post_data
 
@@ -415,6 +426,17 @@ def import_issues(issues):
 		if 'comments' in issue:
 			result_comments = import_comments(issue['comments'], result_issue['number'])
 			print(" > Successfully added", len(result_comments), "comments.")
+
+		if config.getboolean('settings', 'move-issues'):
+			template_data = {}
+			template_data['number'] = result_issue['number']
+			template_data['url'] = result_issue['html_url']
+			template_data['repo'] = config.get('target', 'repository')
+			comment = dict(body = format_moved_comment(template_data))
+			send_request('source', "issues/%(number)s/comments" % issues[i], 'post', comment)
+			if issues[i]['state'] == 'open':
+				send_request('source', "issues/%(number)s" % issues[i], 'patch', dict(state='closed'))
+				print(" > Successfully closed original issue")
 
 		result_issues.append(result_issue)
 
