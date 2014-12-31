@@ -276,23 +276,11 @@ def get_comments_on_issue(which, issue):
 		return []
 
 def import_milestone(source):
-	data = {
-		"title": source['title'],
-		"state": "open",
-		"description": source['description'],
-		"due_on": source['due_on']
-	}
-
 	result_milestone = send_request('target', "milestones", source)
 	print("Successfully created milestone '%s'" % result_milestone['title'])
 	return result_milestone
 
 def import_label(source):
-	data = {
-		"name": source['name'],
-		"color": source['color']
-	}
-
 	result_label = send_request('target', "labels", source)
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
