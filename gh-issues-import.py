@@ -332,10 +332,6 @@ def import_issues(issues):
 		new_issue = {}
 		new_issue['title'] = issue['title']
 
-		# Temporary fix for marking closed issues
-		if issue['closed_at']:
-			new_issue['title'] = "[CLOSED] " + new_issue['title']
-
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
 			new_issue['comments'] = get_comments_on_issue('source', issue)
@@ -398,7 +394,7 @@ def import_issues(issues):
 		result_label = import_label(label)
 
 	result_issues = []
-	for issue in new_issues:
+	for i, issue in enumerate(new_issues):
 
 		if 'milestone_object' in issue:
 			issue['milestone'] = issue['milestone_object']['number']
@@ -412,6 +408,8 @@ def import_issues(issues):
 			del issue['label_objects']
 
 		result_issue = send_request('target', "issues", 'post', issue)
+		if issues[i]['state'] == 'closed':
+			send_request('target', "issues/%(number)s" % result_issue, 'patch', dict(state='closed'))
 		print("Successfully created issue '%s'" % result_issue['title'])
 
 		if 'comments' in issue:
