@@ -463,7 +463,7 @@ if __name__ == '__main__':
 		target_issues.append({
 				'number': issue['number'],
 				'body': issue['body'],
-				'source_number': int(issue['body'].split('rails-4-with-semantic/issues/')[1].split('_\n')[0]),
+				'source_number': int(issue['body'].split(str("%s/issues/" % config.get('source', 'repository')))[1].split('_\n')[0]),
 				'title': issue['title']
 			}
 		)
