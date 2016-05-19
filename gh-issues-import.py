@@ -298,7 +298,7 @@ def import_comments(comments, issue_number):
 	return result_comments
 
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
-def import_issues(issues):
+def import_issues(issues, target_issues):
 
 	state.current = state.GENERATING
 	
@@ -323,15 +323,16 @@ def import_issues(issues):
 		
 		new_issue = {}
 		new_issue['title'] = issue['title']
-		
+		new_issue['number'] = issue['number']
+
 		# Temporary fix for marking closed issues
 		if issue['closed_at']:
 			new_issue['title'] = "[CLOSED] " + new_issue['title']
-		
+
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
 			new_issue['comments'] = get_comments_on_issue('source', issue)
-		
+
 		if config.getboolean('settings', 'import-milestone') and 'milestone' in issue and issue['milestone'] is not None:
 			# Since the milestones' ids are going to differ, we will compare them by title instead
 			found_milestone = get_milestone_by_title(issue['milestone']['title'])
@@ -342,7 +343,7 @@ def import_issues(issues):
 				new_issue['milestone_object'] = new_milestone
 				known_milestones.append(new_milestone) # Allow it to be found next time
 				new_milestones.append(new_milestone)   # Put it in a queue to add it later
-		
+
 		if config.getboolean('settings', 'import-labels') and 'labels' in issue and issue['labels'] is not None:
 			new_issue['label_objects'] = []
 			for issue_label in issue['labels']:
@@ -353,7 +354,7 @@ def import_issues(issues):
 					new_issue['label_objects'].append(issue_label)
 					known_labels.append(issue_label) # Allow it to be found next time
 					new_labels.append(issue_label)   # Put it in a queue to add it later
-		
+
 		template_data = {}
 		template_data['user_name'] = issue['user']['login']
 		template_data['user_url'] = issue['user']['html_url']
@@ -361,16 +362,16 @@ def import_issues(issues):
 		template_data['date'] = format_date(issue['created_at'])
 		template_data['url'] =  issue['html_url']
 		template_data['body'] = issue['body']
-		
+
 		if "pull_request" in issue and issue['pull_request']['html_url'] is not None:
 			new_issue['body'] = format_pull_request(template_data)
 		else:
 			new_issue['body'] = format_issue(template_data)
-		
+
 		new_issues.append(new_issue)
-	
+
 	state.current = state.IMPORT_CONFIRMATION
-	
+
 	print("You are about to add to '" + config.get('target', 'repository') + "':")
 	print(" *", len(new_issues), "new issues") 
 	print(" *", num_new_comments, "new comments") 
@@ -378,39 +379,53 @@ def import_issues(issues):
 	print(" *", len(new_labels), "new labels") 
 	if not query.yes_no("Are you sure you wish to continue?"):
 		sys.exit()
-	
+
 	state.current = state.IMPORTING
-	
+
 	for milestone in new_milestones:
 		result_milestone = import_milestone(milestone)
 		milestone['number'] = result_milestone['number']
 		milestone['url'] = result_milestone['url']
-	
+
 	for label in new_labels:
 		result_label = import_label(label)
-	
+
 	result_issues = []
 	for issue in new_issues:
-		
+
 		if 'milestone_object' in issue:
 			issue['milestone'] = issue['milestone_object']['number']
 			del issue['milestone_object']
-		
+
 		if 'label_objects' in issue:
 			issue_labels = []
 			for label in issue['label_objects']:
 				issue_labels.append(label['name'])
 			issue['labels'] = issue_labels
 			del issue['label_objects']
-		
-		result_issue = send_request('target', "issues", issue)
-		print("Successfully created issue '%s'" % result_issue['title'])
-		
-		if 'comments' in issue:
-			result_comments = import_comments(issue['comments'], result_issue['number'])		
-			print(" > Successfully added", len(result_comments), "comments.")
-		
-		result_issues.append(result_issue)
+
+		matching_issue = None
+		for d in target_issues:
+			if d['source_number'] == issue['number']:
+				matching_issue = d
+
+		result_issue = {}
+		if matching_issue is not None:
+			result_issue['number'] = matching_issue['number']
+			print("Did'nt created '%s' because it already exists" % issue['title'])
+			print("Source issue # is '%s'" % issue['number'])
+			print("Target issue # is '%s'" % matching_issue['number'])
+
+		else:
+			result_issue = send_request('target', "issues", issue)
+			print("Successfully created issue '%s'" % result_issue['title'])
+
+		#TODO: avoid duplicate comments in the following section
+		#if 'comments' in issue:
+		#	result_comments = import_comments(issue['comments'], result_issue['number'])
+		#	print(" > Successfully added", len(result_comments), "comments.")
+
+		#result_issues.append(result_issue)
 	
 	state.current = state.IMPORT_COMPLETE
 	
@@ -423,6 +438,7 @@ if __name__ == '__main__':
 	
 	issue_ids = init_config()	
 	issues = []
+	destination_issues = []
 	
 	state.current = state.FETCHING_ISSUES
 	
@@ -432,18 +448,30 @@ if __name__ == '__main__':
 	
 	if config.getboolean('settings', 'import-open-issues'):
 		issues += get_issues_by_state('source', 'open')
-	
+		destination_issues += get_issues_by_state('target', 'open')
+
 	if config.getboolean('settings', 'import-closed-issues'):
 		issues += get_issues_by_state('source', 'closed')
 	
 	# Sort issues based on their original `id` field
 	# Confusing, but taken from http://stackoverflow.com/a/2878123/617937
 	issues.sort(key=lambda x:x['number'])
-	
+	destination_issues.sort(key=lambda x:x['number'])
+
+	target_issues = []
+	for issue in destination_issues:
+		target_issues.append({
+				'number': issue['number'],
+				'body': issue['body'],
+				'source_number': int(issue['body'].split(str("%s/issues/" % config.get('source', 'repository')))[1].split('_\n')[0]),
+				'title': issue['title']
+			}
+		)
+
 	# Further states defined within the function
 	# Finally, add these issues to the target repository
-	import_issues(issues)
-	
+	import_issues(issues, target_issues)
+
 	state.current = state.COMPLETE
 
 
