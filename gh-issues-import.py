@@ -455,15 +455,14 @@ if __name__ == '__main__':
 	# Argparser will prevent us from getting both issue ids and specifying issue state, so no duplicates will be added
 	if (len(issue_ids) > 0):
 		issues += get_issues_by_id('source', issue_ids)
-		target_issues += get_issues_by_id('target', issue_ids)
 	
 	if config.getboolean('settings', 'import-open-issues'):
 		issues += get_issues_by_state('source', 'open')
-		target_issues += get_issues_by_state('target', 'open')
+	target_issues += get_issues_by_state('target', 'open')
 
 	if config.getboolean('settings', 'import-closed-issues'):
 		issues += get_issues_by_state('source', 'closed')
-		target_issues += get_issues_by_state('target', 'closed')
+	target_issues += get_issues_by_state('target', 'closed')
 	
 	# Sort issues based on their original `id` field
 	# Confusing, but taken from http://stackoverflow.com/a/2878123/617937
