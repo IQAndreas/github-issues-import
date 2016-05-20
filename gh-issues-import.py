@@ -278,10 +278,10 @@ def import_label(source):
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
 
-def import_comments(comments, issue_number):
+def import_comments(comments, issue_number, target_comments):
 	result_comments = []
 	for comment in comments:
-	
+
 		template_data = {}
 		template_data['user_name'] = comment['user']['login']
 		template_data['user_url'] = comment['user']['html_url']
@@ -289,16 +289,24 @@ def import_comments(comments, issue_number):
 		template_data['date'] = format_date(comment['created_at'])
 		template_data['url'] =  comment['html_url']
 		template_data['body'] = comment['body']
-		
+
 		comment['body'] = format_comment(template_data)
 
-		result_comment = send_request('target', "issues/%s/comments" % issue_number, comment)
-		result_comments.append(result_comment)
-		
+		result_comment = None
+		comment_exist = False
+		for i in target_comments:
+			if template_data['date'] in i['body']:
+				comment_exist = True
+				break
+
+		if comment_exist is False:
+			result_comment = send_request('target', "issues/%s/comments" % issue_number, comment)
+			result_comments.append(result_comment)
+
 	return result_comments
 
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
-def import_issues(issues):
+def import_issues(issues, target_issues):
 
 	state.current = state.GENERATING
 	
@@ -320,10 +328,11 @@ def import_issues(issues):
 	new_labels = []
 	
 	for issue in issues:
-		
+
 		new_issue = {}
 		new_issue['title'] = issue['title']
-		
+		new_issue['number'] = issue['number']
+
 		# Temporary fix for marking closed issues
 		if issue['closed_at']:
 			new_issue['title'] = "[CLOSED] " + new_issue['title']
@@ -402,14 +411,32 @@ def import_issues(issues):
 				issue_labels.append(label['name'])
 			issue['labels'] = issue_labels
 			del issue['label_objects']
-		
-		result_issue = send_request('target', "issues", issue)
-		print("Successfully created issue '%s'" % result_issue['title'])
-		
+
+		matching_issue = None
+		for i in target_issues:
+			if 'source_number' in i:
+				if i['source_number'] == issue['number']:
+					matching_issue = i
+					break
+
+		result_issue = None
+		print("")
+		if matching_issue is not None:
+			result_issue = matching_issue
+			print("Did'nt created '%s' because it already exists. Source issue # -> %s and Target issue # -> %s" % (issue['title'], issue['number'], matching_issue['number']))
+
+		else:
+			result_issue = send_request('target', "issues", issue)
+			print("Successfully created issue '%s'" % result_issue['title'])
+
+		result_issue['comments'] = get_comments_on_issue('target', result_issue)
 		if 'comments' in issue:
-			result_comments = import_comments(issue['comments'], result_issue['number'])		
+			result_comments = import_comments(issue['comments'], result_issue['number'], result_issue['comments'])
 			print(" > Successfully added", len(result_comments), "comments.")
-		
+
+		else:
+			print(" > No comments for this issue")
+
 		result_issues.append(result_issue)
 	
 	state.current = state.IMPORT_COMPLETE
@@ -423,27 +450,42 @@ if __name__ == '__main__':
 	
 	issue_ids = init_config()	
 	issues = []
+	target_issues = []
 	
 	state.current = state.FETCHING_ISSUES
 	
 	# Argparser will prevent us from getting both issue ids and specifying issue state, so no duplicates will be added
 	if (len(issue_ids) > 0):
 		issues += get_issues_by_id('source', issue_ids)
+		target_issues += get_issues_by_state('target', 'open')
+		target_issues += get_issues_by_state('target', 'closed')
 	
 	if config.getboolean('settings', 'import-open-issues'):
 		issues += get_issues_by_state('source', 'open')
-	
+		target_issues += get_issues_by_state('target', 'open')
+
 	if config.getboolean('settings', 'import-closed-issues'):
 		issues += get_issues_by_state('source', 'closed')
-	
+		target_issues += get_issues_by_state('target', 'closed')
+
 	# Sort issues based on their original `id` field
 	# Confusing, but taken from http://stackoverflow.com/a/2878123/617937
 	issues.sort(key=lambda x:x['number'])
-	
+
+	target_issues.sort(key=lambda x:x['number'])
+
+	for issue in target_issues:
+		try:
+			issue['source_number'] = int(issue['body'].split(str("%s/issues/" % config.get('source', 'repository')))[1].split('_\n')[0])
+		except:
+			pass
+
 	# Further states defined within the function
 	# Finally, add these issues to the target repository
-	import_issues(issues)
+	import_issues(issues, target_issues)
 	
 	state.current = state.COMPLETE
+
+	print("")
 
 
