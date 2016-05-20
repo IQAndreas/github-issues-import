@@ -414,8 +414,10 @@ def import_issues(issues, target_issues):
 
 		matching_issue = None
 		for i in target_issues:
-			if i['source_number'] == issue['number']:
-				matching_issue = i
+			if 'source_number' in i:
+				if i['source_number'] == issue['number']:
+					matching_issue = i
+					break
 
 		result_issue = None
 		print("")
