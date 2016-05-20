@@ -471,7 +471,10 @@ if __name__ == '__main__':
 	target_issues.sort(key=lambda x:x['number'])
 
 	for issue in target_issues:
-		issue['source_number'] = int(issue['body'].split(str("%s/issues/" % config.get('source', 'repository')))[1].split('_\n')[0])
+		try:
+			issue['source_number'] = int(issue['body'].split(str("%s/issues/" % config.get('source', 'repository')))[1].split('_\n')[0])
+		except:
+			pass
 
 	# Further states defined within the function
 	# Finally, add these issues to the target repository
