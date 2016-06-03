@@ -430,7 +430,7 @@ def import_issues(issues, target_issues):
 		if matching_issue is not None:
 			result_issue = matching_issue
 			
-			url="issues/%s" % issue['number']
+			url="issues/%s" % matching_issue['number']
 			result_issue = send_request('target', url, issue)
 			print("Issue updated'%s' because it already exists. Source issue # -> %s and Target issue # -> %s" % (issue['title'], issue['number'], matching_issue['number']))
 
