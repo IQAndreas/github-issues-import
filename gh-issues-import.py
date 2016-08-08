@@ -427,7 +427,7 @@ def import_issues(issues, target_issues):
 
 		result_issue = None
 		
-		if matching_issue is not None:
+		if matching_issue is not None and matching_issue['state']=='open':
 			result_issue = matching_issue
 			
 			url="issues/%s" % matching_issue['number']
