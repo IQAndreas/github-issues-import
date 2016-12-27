@@ -225,7 +225,15 @@ def get_milestones(which):
 	return send_request(which, "milestones?state=open")
 
 def get_labels(which):
-	return send_request(which, "labels")
+	page = 1
+	labels = []
+	while True:
+		next_labels = send_request(which, "labels?page=%s" % page)
+		if next_labels:
+			labels.extend(next_labels)
+			page += 1
+		else:
+			return labels
 	
 def get_issue_by_id(which, issue_id):
 	return send_request(which, "issues/%d" % issue_id)
@@ -273,7 +281,6 @@ def import_label(source):
 		"name": source['name'],
 		"color": source['color']
 	}
-	
 	result_label = send_request('target', "labels", source)
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
