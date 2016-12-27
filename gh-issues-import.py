@@ -281,6 +281,7 @@ def import_label(source):
 		"name": source['name'],
 		"color": source['color']
 	}
+	
 	result_label = send_request('target', "labels", source)
 	print("Successfully created label '%s'" % result_label['name'])
 	return result_label
