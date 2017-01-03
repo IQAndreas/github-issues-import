@@ -417,6 +417,17 @@ def import_issues(issues):
 	return result_issues
 
 
+def close_issues(issues):
+	tag = '[CLOSED] '
+	for issue in issues:
+		if tag in issue['title']:
+			closed_issue = {}
+			closed_issue['state'] = 'closed'
+			closed_issue['title'] = issue['title'][len(tag):]
+			result_issue = send_request('target', "issues/%d" % issue['number'], closed_issue)
+			print("Successfully closed issue '%s'" % result_issue['title'])
+
+
 if __name__ == '__main__':
 	
 	state.current = state.LOADING_CONFIG
@@ -446,4 +457,7 @@ if __name__ == '__main__':
 	
 	state.current = state.COMPLETE
 
+	# Close the imported issues to the target repository with the closed tag, "[CLOSED]"
+	closed_issues = get_issues_by_state('target', 'open')
+	close_issues(closed_issues)
 
