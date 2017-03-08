@@ -15,14 +15,14 @@ config = configparser.RawConfigParser()
 
 class state:
 	current = ""
-	INITIALIZING         = "script-initializing"
-	LOADING_CONFIG       = "loading-config"
-	FETCHING_ISSUES      = "fetching-issues"
-	GENERATING           = "generating"
+	INITIALIZING	     = "script-initializing"
+	LOADING_CONFIG	     = "loading-config"
+	FETCHING_ISSUES	     = "fetching-issues"
+	GENERATING	     = "generating"
 	IMPORT_CONFIRMATION  = "import-confirmation"
-	IMPORTING            = "importing"
-	IMPORT_COMPLETE      = "import-complete"
-	COMPLETE             = "script-complete"
+	IMPORTING	     = "importing"
+	IMPORT_COMPLETE	     = "import-complete"
+	COMPLETE	     = "script-complete"
 	
 state.current = state.INITIALIZING
 
@@ -54,15 +54,18 @@ def init_config():
 	arg_parser.add_argument('--ignore-comments',  dest='ignore_comments',  action='store_true', help="Do not import comments in the issue.")		
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
+	arg_parser.add_argument('--close-after-import', dest='close_after_import', action='store_true', help="Close the issues after they are imported to the target repository.")
 	
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
 	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
-		
+	arg_parser.add_argument('--additional-labels', dest='additional_labels', nargs='+', type=str, help="A list of additional labels to apply to the new issues (labels must exist in target repository).")
+	
 	include_group = arg_parser.add_mutually_exclusive_group(required=True)
 	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
 	include_group.add_argument("--open", dest='import_open', action='store_true', help="Import only open issues.")
 	include_group.add_argument("--closed", dest='import_closed', action='store_true', help="Import only closed issues.")
+	include_group.add_argument("--labels", type=str, nargs="+", help="A list of labels to filter for.")
 	include_group.add_argument("-i", "--issues", type=int, nargs='+', help="The list of issues to import.");
 
 	args = arg_parser.parse_args()
@@ -104,7 +107,8 @@ def init_config():
 	
 	config.set('settings', 'import-comments',  str(not args.ignore_comments))
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
-	config.set('settings', 'import-labels',    str(not args.ignore_labels))
+	config.set('settings', 'import-labels', str(not args.ignore_labels))
+	config.set('settings', 'close-after-import', str(args.close_after_import))
 	
 	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open));
 	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
@@ -158,7 +162,7 @@ def init_config():
 	get_credentials_for('target')
 	
 	# Everything is here! Continue on our merry way...
-	return args.issues or []
+	return args.issues or [] , args.labels or [], args.additional_labels or []
 
 def format_date(datestring):
 	# The date comes from the API in ISO-8601 format
@@ -187,14 +191,13 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
-def send_request(which, url, post_data=None):
+def send_request(which, url, post_data=None, method=None):
 
 	if post_data is not None:
 		post_data = json.dumps(post_data).encode("utf-8")
 	
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
-	req = urllib.request.Request(full_url, post_data)
-	
+	req = urllib.request.Request(full_url, post_data, method=method)
 	username = config.get(which, 'username')
 	password = config.get(which, 'password')
 	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
@@ -225,7 +228,15 @@ def get_milestones(which):
 	return send_request(which, "milestones?state=open")
 
 def get_labels(which):
-	return send_request(which, "labels")
+	labels = []
+	page = 1
+	while True:
+		l = send_request(which,"labels?direction=asc&page=%d" % page)
+		if len(l) <= 0:
+			return labels
+		labels.extend(l)
+		page += 1
+	return labels
 	
 def get_issue_by_id(which, issue_id):
 	return send_request(which, "issues/%d" % issue_id)
@@ -244,6 +255,17 @@ def get_issues_by_state(which, state):
 	page = 1
 	while True:
 		new_issues = send_request(which, "issues?state=%s&direction=asc&page=%d" % (state, page))
+		if not new_issues:
+			break
+		issues.extend(new_issues)
+		page += 1
+	return issues
+
+def get_issues_by_labels(which, labels):
+	issues = []
+	page = 1
+	while True:
+		new_issues = send_request(which, "issues?labels=%s&direction=asc&page=%d" % (",".join(labels),page))
 		if not new_issues:
 			break
 		issues.extend(new_issues)
@@ -287,7 +309,7 @@ def import_comments(comments, issue_number):
 		template_data['user_url'] = comment['user']['html_url']
 		template_data['user_avatar'] = comment['user']['avatar_url']
 		template_data['date'] = format_date(comment['created_at'])
-		template_data['url'] =  comment['html_url']
+		template_data['url'] =	comment['html_url']
 		template_data['body'] = comment['body']
 		
 		comment['body'] = format_comment(template_data)
@@ -298,7 +320,7 @@ def import_comments(comments, issue_number):
 	return result_comments
 
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
-def import_issues(issues):
+def import_issues(issues, close_after_import=False, additional_labels=[]):
 
 	state.current = state.GENERATING
 	
@@ -309,7 +331,7 @@ def import_issues(issues):
 		return None
 	
 	known_labels = get_labels('target')
-	def get_label_by_name(name):
+	def get_label_by_name(known_labels,name):
 		for label in known_labels:
 			if label['name'] == name : return label
 		return None
@@ -323,6 +345,7 @@ def import_issues(issues):
 		
 		new_issue = {}
 		new_issue['title'] = issue['title']
+		new_issue['number'] = issue['number']
 		
 		# Temporary fix for marking closed issues
 		if issue['closed_at']:
@@ -346,20 +369,20 @@ def import_issues(issues):
 		if config.getboolean('settings', 'import-labels') and 'labels' in issue and issue['labels'] is not None:
 			new_issue['label_objects'] = []
 			for issue_label in issue['labels']:
-				found_label = get_label_by_name(issue_label['name'])
+				found_label = get_label_by_name(known_labels,issue_label['name'])
 				if found_label:
 					new_issue['label_objects'].append(found_label)
 				else:
 					new_issue['label_objects'].append(issue_label)
 					known_labels.append(issue_label) # Allow it to be found next time
-					new_labels.append(issue_label)   # Put it in a queue to add it later
+					new_labels.append(issue_label)	 # Put it in a queue to add it later
 		
 		template_data = {}
 		template_data['user_name'] = issue['user']['login']
 		template_data['user_url'] = issue['user']['html_url']
 		template_data['user_avatar'] = issue['user']['avatar_url']
 		template_data['date'] = format_date(issue['created_at'])
-		template_data['url'] =  issue['html_url']
+		template_data['url'] =	issue['html_url']
 		template_data['body'] = issue['body']
 		
 		if "pull_request" in issue and issue['pull_request']['html_url'] is not None:
@@ -391,18 +414,22 @@ def import_issues(issues):
 	
 	result_issues = []
 	for issue in new_issues:
-		
 		if 'milestone_object' in issue:
 			issue['milestone'] = issue['milestone_object']['number']
 			del issue['milestone_object']
 		
+		issue['labels'] = []
 		if 'label_objects' in issue:
-			issue_labels = []
+			labels = []
 			for label in issue['label_objects']:
-				issue_labels.append(label['name'])
-			issue['labels'] = issue_labels
+				labels.append(label['name'])
+			issue['labels'] = labels
 			del issue['label_objects']
-		
+		issue['labels'].extend(additional_labels)
+
+		issue_number = issue['number']
+		del issue['number']
+
 		result_issue = send_request('target', "issues", issue)
 		print("Successfully created issue '%s'" % result_issue['title'])
 		
@@ -411,7 +438,11 @@ def import_issues(issues):
 			print(" > Successfully added", len(result_comments), "comments.")
 		
 		result_issues.append(result_issue)
-	
+
+		if close_after_import:			      
+			send_request('source','issues/%d' % issue_number, { "state": "closed" }, method="PATCH")
+			print("Successfully closed issue '%s'" % issue_number)
+		
 	state.current = state.IMPORT_COMPLETE
 	
 	return result_issues
@@ -421,12 +452,13 @@ if __name__ == '__main__':
 	
 	state.current = state.LOADING_CONFIG
 	
-	issue_ids = init_config()	
+	issue_ids, issue_labels, additional_labels = init_config()
+
 	issues = []
 	
 	state.current = state.FETCHING_ISSUES
 	
-	# Argparser will prevent us from getting both issue ids and specifying issue state, so no duplicates will be added
+	# Argparser will prevent us from getting both issue ids and specifying issue state or labels, so no duplicates will be added
 	if (len(issue_ids) > 0):
 		issues += get_issues_by_id('source', issue_ids)
 	
@@ -435,15 +467,16 @@ if __name__ == '__main__':
 	
 	if config.getboolean('settings', 'import-closed-issues'):
 		issues += get_issues_by_state('source', 'closed')
-	
+
+	if len(issue_labels) > 0:
+		issues += get_issues_by_labels('source', issue_labels)
+		
 	# Sort issues based on their original `id` field
 	# Confusing, but taken from http://stackoverflow.com/a/2878123/617937
 	issues.sort(key=lambda x:x['number'])
 	
 	# Further states defined within the function
 	# Finally, add these issues to the target repository
-	import_issues(issues)
+	import_issues(issues,config.getboolean('settings','close-after-import'),additional_labels)
 	
 	state.current = state.COMPLETE
-
-
