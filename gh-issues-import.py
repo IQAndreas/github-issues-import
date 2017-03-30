@@ -326,7 +326,7 @@ def import_issues(issues):
 		
 		# Temporary fix for marking closed issues
 		if issue['closed_at']:
-			new_issue['title'] = "[CLOSED] " + new_issue['title']
+			new_issue['state'] = "closed"
 		
 		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
 			num_new_comments += int(issue['comments'])
@@ -404,6 +404,8 @@ def import_issues(issues):
 			del issue['label_objects']
 		
 		result_issue = send_request('target', "issues", issue)
+		if issue['state'] == "closed":
+			send_request('target', "issues/" + str(result_issue['number']), issue)
 		print("Successfully created issue '%s'" % result_issue['title'])
 		
 		if 'comments' in issue:
