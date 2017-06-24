@@ -187,6 +187,26 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
+def send_request_paginate(which, url):
+	if "?" not in url:
+		url += "?"
+	else:
+		url += "&"
+
+	retval = []
+	page_num = 1
+	should_run = True
+
+	while should_run:
+		current_url = url + ("page=%s" % page_num)
+		current_result = send_request(which, current_url)
+		if len(current_result) > 0:
+			retval.extend(current_result)
+			page_num += 1
+		else:
+			should_run = False
+	return retval
+
 def send_request(which, url, post_data=None):
 
 	if post_data is not None:
@@ -252,7 +272,7 @@ def get_issues_by_state(which, state):
 
 def get_comments_on_issue(which, issue):
 	if issue['comments'] != 0:
-		return send_request(which, "issues/%s/comments" % issue['number'])
+		return send_request_paginate(which, "issues/%s/comments" % issue['number'])
 	else :
 		return []
 
