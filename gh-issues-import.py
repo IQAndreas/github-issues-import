@@ -260,7 +260,7 @@ def get_issues_by_id(which, issue_ids):
 
 # Allowed values for state are 'open' and 'closed'
 def get_issues_by_state(which, state):
-        return send_request_paginate(which, "issues?state=%s&direction=asc" % state)
+	return send_request_paginate(which, "issues?state=%s&direction=asc" % state)
 
 def get_comments_on_issue(which, issue):
 	if issue['comments'] != 0:
