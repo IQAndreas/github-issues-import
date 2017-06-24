@@ -200,7 +200,7 @@ def send_request_paginate(which, url):
 	while should_run:
 		current_url = url + ("page=%s" % page_num)
 		current_result = send_request(which, current_url)
-		if len(current_result) > 0:
+		if current_result:
 			retval.extend(current_result)
 			page_num += 1
 		else:
@@ -245,7 +245,7 @@ def get_milestones(which):
 	return send_request(which, "milestones?state=open")
 
 def get_labels(which):
-	return send_request(which, "labels")
+	return send_request_paginate(which, "labels")
 	
 def get_issue_by_id(which, issue_id):
 	return send_request(which, "issues/%d" % issue_id)
