@@ -347,11 +347,12 @@ def import_issues_golden_comet(issues):
 		issue_migration = {}
 		new_issue = {}
 		new_issue['title'] = issue['title']
-		new_issue['closed_at'] = issue['closed_at']
+		if issue['closed_at'] is not None:
+			new_issue['closed_at'] = issue['closed_at']
+			new_issue['closed'] = True
 		new_issue['created_at'] = issue['created_at']
 		new_issue['updated_at'] = issue['updated_at']
 		# TODO new_issue['assignee'] = issue['assignee']
-		new_issue['closed'] = issue['closed_at'] != None
 
 		if config.getboolean('settings', 'import-milestone') and 'milestone' in issue and issue['milestone'] is not None:
 			# Since the milestones' ids are going to differ, we will compare them by title instead
