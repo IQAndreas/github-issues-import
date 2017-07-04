@@ -455,7 +455,7 @@ def import_issues_golden_comet(issues):
 	
 	# TODO wait for import requests to complete
 	
-	return result_issues
+	return issue_migrations
 
 
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
