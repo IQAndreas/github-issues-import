@@ -54,6 +54,8 @@ def init_config():
 	arg_parser.add_argument('--ignore-comments',  dest='ignore_comments',  action='store_true', help="Do not import comments in the issue.")		
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
+	arg_parser.add_argument('--ignore-pullrequests',    dest='ignore_pullrequests',    action='store_true', help="Do not import issues that are pull requests.")
+
 	
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
@@ -108,6 +110,7 @@ def init_config():
 	
 	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open));
 	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
+	config.set('settings', 'import-pullrequests',  str(not args.ignore_pullrequests));
 	
 	
 	# Make sure no required config values are missing
@@ -250,11 +253,15 @@ def get_issues_by_id(which, issue_ids):
 def get_issues_by_state(which, state):
 	issues = []
 	page = 1
+	import_pullrequests = config.getboolean('settings', 'import-pullrequests')
 	while True:
 		new_issues = send_request(which, "issues?state=%s&direction=asc&page=%d" % (state, page))
 		if not new_issues:
 			break
-		issues.extend(new_issues)
+		if import_pullrequests:
+			issues.extend(new_issues)
+		else:
+			issues.extend(filter(lambda issue:'pull_request' not in issue ,new_issues))
 		page += 1
 	return issues
 
