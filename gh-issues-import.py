@@ -6,6 +6,7 @@ import base64
 import sys, os
 import datetime
 import argparse, configparser
+import time
 
 import query
 
@@ -28,7 +29,6 @@ state.current = state.INITIALIZING
 
 http_error_messages = {}
 http_error_messages[401] = "ERROR: There was a problem during authentication.\nDouble check that your username and password are correct, and that you have permission to read from or write to the specified repositories."
-http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
 http_error_messages[404] = "ERROR: Unable to find the specified repository.\nDouble check the spelling for the source and target repositories. If either repository is private, make sure the specified user is allowed access to it."
 
 
@@ -217,15 +217,17 @@ def send_request(which, url, post_data=None, method=None):
 			error_details = error.read();
 			error_details = json.loads(error_details.decode("utf-8"))
 
-			if error.code in http_error_messages:
+			if error.code == 403:
+				print("Got 403 [%s], assuming rate limit error and waiting for 1 minute...", error_details['message'])
+				time.sleep(60)
+				retry = True
+			elif error.code in http_error_messages:
 				sys.exit(http_error_messages[error.code])
 			else:
 				error_message = "ERROR: There was a problem importing the issues.\n%s %s" % (error.code, error.reason)
 				if 'message' in error_details:
 					error_message += "\nDETAILS: " + error_details['message']
 				sys.exit(error_message)
-		except urllib.error.URLError as error:
-			retry = True
 	
 	return json.loads(json_data.decode("utf-8"))
 
