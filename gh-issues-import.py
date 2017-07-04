@@ -345,7 +345,7 @@ def import_issues_golden_comet(issues):
 	
 	for issue in issues:
 		issue_migration = {}
-		new_issue = []
+		new_issue = {}
 		new_issue['title'] = issue['title']
 		new_issue['closed_at'] = issue['closed_at']
 		new_issue['created_at'] = issue['created_at']
@@ -380,7 +380,7 @@ def import_issues_golden_comet(issues):
 			num_new_comments += int(issue['comments'])
 			original_comments = get_comments_on_issue('source', issue)
 			for original_comment in original_comments:
-				comment = []
+				comment = {}
 				ctemplate_data = {}
 				ctemplate_data['user_name'] = original_comment['user']['login']
 				ctemplate_data['user_url'] = original_comment['user']['html_url']
