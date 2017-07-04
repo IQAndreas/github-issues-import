@@ -433,8 +433,8 @@ def import_issues_golden_comet(issues):
 		result_label = import_label(label)
 	
 	migration_results = []
-	for issue in new_issues:
-		
+	for issue_migration in issue_migrations:
+		issue = issue_migration['issue']
 		if 'milestone_object' in issue:
 			issue['milestone'] = issue['milestone_object']['number']
 			del issue['milestone_object']
@@ -446,7 +446,7 @@ def import_issues_golden_comet(issues):
 			issue['labels'] = issue_labels
 			del issue['label_objects']
 		
-		migration_result = send_request('target', "import/issues", issue, POST, "application/vnd.github.golden-comet-preview+json")
+		migration_result = send_request('target', "import/issues", issue_migration, "POST", "application/vnd.github.golden-comet-preview+json")
 		print("Sent import request. Status: '%s'. Status url: '%s'" % (migration_result['status'], migration_result['import_issues_url']))
 		
 		migration_results.append(migration_result)
