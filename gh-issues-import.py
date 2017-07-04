@@ -447,7 +447,7 @@ def import_issues_golden_comet(issues):
 			del issue['label_objects']
 		
 		migration_result = send_request('target', "import/issues", issue_migration, "POST", "application/vnd.github.golden-comet-preview+json")
-		print("Sent import request. Status: '%s'. Status url: '%s'" % (migration_result['status'], migration_result['import_issues_url']))
+		print("Sent import request. Status: '%s'. Status url: '%s'" % (migration_result['status'], migration_result['url']))
 		
 		migration_results.append(migration_result)
 	
