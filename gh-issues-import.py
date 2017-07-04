@@ -55,7 +55,7 @@ def init_config():
 	arg_parser.add_argument('--ignore-milestone', dest='ignore_milestone', action='store_true', help="Do not import the milestone attached to the issue.")
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
 	arg_parser.add_argument('--ignore-pullrequests',    dest='ignore_pullrequests',    action='store_true', help="Do not import issues that are pull requests.")
-
+	arg_parser.add_argument('--use-github-import-api', dest='use_github_import_api', action='store_true', help="Use the new github import api")
 	
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
@@ -65,7 +65,7 @@ def init_config():
 	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
 	include_group.add_argument("--open", dest='import_open', action='store_true', help="Import only open issues.")
 	include_group.add_argument("--closed", dest='import_closed', action='store_true', help="Import only closed issues.")
-	include_group.add_argument("-i", "--issues", type=int, nargs='+', help="The list of issues to import.");
+	include_group.add_argument("-i", "--issues", type=int, nargs='+', help="The list of issues to import.")
 
 	args = arg_parser.parse_args()
 	
@@ -108,9 +108,10 @@ def init_config():
 	config.set('settings', 'import-milestone', str(not args.ignore_milestone))
 	config.set('settings', 'import-labels',    str(not args.ignore_labels))
 	
-	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open));
-	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
-	config.set('settings', 'import-pullrequests',  str(not args.ignore_pullrequests));
+	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open))
+	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed))
+	config.set('settings', 'import-pullrequests',  str(not args.ignore_pullrequests))
+	config.set('settings', 'use-github-import-api', str(args.use_github_import_api))
 	
 	
 	# Make sure no required config values are missing
@@ -190,7 +191,7 @@ def format_comment(template_data):
 	template = config.get('format', 'comment_template', fallback=default_template)
 	return format_from_template(template, template_data)
 
-def send_request(which, url, post_data=None, method=None):
+def send_request(which, url, post_data=None, method=None, accept=None):
 
 	if post_data is not None:
 		post_data = json.dumps(post_data).encode("utf-8")
@@ -203,7 +204,10 @@ def send_request(which, url, post_data=None, method=None):
 	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
 	
 	req.add_header("Content-Type", "application/json")
-	req.add_header("Accept", "application/json")
+	if accept is not None:
+		req.add_header("Accept", accept)
+	else:
+		req.add_header("Accept", "application/json")
 	req.add_header("User-Agent", "IQAndreas/github-issues-import")
 
 	retry = True
@@ -318,6 +322,140 @@ def import_comments(comments, issue_number):
 		result_comments.append(result_comment)
 		
 	return result_comments
+
+def import_issues_golden_comet(issues):
+	state.current = state.GENERATING
+
+	known_milestones = get_milestones('target')
+	def get_milestone_by_title(title):
+		for milestone in known_milestones:
+			if milestone['title'] == title : return milestone
+		return None
+	
+	known_labels = get_labels('target')
+	def get_label_by_name(name):
+		for label in known_labels:
+			if label['name'] == name : return label
+		return None
+
+	issue_migrations = []
+	new_milestones = []
+	num_new_comments = 0
+	new_labels = []
+	
+	for issue in issues:
+		issue_migration = {}
+		new_issue = []
+		new_issue['title'] = issue['title']
+		new_issue['closed_at'] = issue['closed_at']
+		new_issue['created_at'] = issue['created_at']
+		new_issue['updated_at'] = issue['updated_at']
+		# TODO new_issue['assignee'] = issue['assignee']
+		new_issue['closed'] = issue['closed_at'] != None
+
+		if config.getboolean('settings', 'import-milestone') and 'milestone' in issue and issue['milestone'] is not None:
+			# Since the milestones' ids are going to differ, we will compare them by title instead
+			found_milestone = get_milestone_by_title(issue['milestone']['title'])
+			if found_milestone:
+				new_issue['milestone_object'] = found_milestone
+			else:
+				new_milestone = issue['milestone']
+				new_issue['milestone_object'] = new_milestone
+				known_milestones.append(new_milestone) # Allow it to be found next time
+				new_milestones.append(new_milestone)   # Put it in a queue to add it later
+		
+		if config.getboolean('settings', 'import-labels') and 'labels' in issue and issue['labels'] is not None:
+			new_issue['label_objects'] = []
+			for issue_label in issue['labels']:
+				found_label = get_label_by_name(issue_label['name'])
+				if found_label:
+					new_issue['label_objects'].append(found_label)
+				else:
+					new_issue['label_objects'].append(issue_label)
+					known_labels.append(issue_label) # Allow it to be found next time
+					new_labels.append(issue_label)   # Put it in a queue to add it later
+		
+		comments = []
+		if config.getboolean('settings', 'import-comments') and 'comments' in issue and issue['comments'] != 0:
+			num_new_comments += int(issue['comments'])
+			original_comments = get_comments_on_issue('source', issue)
+			for original_comment in original_comments:
+				comment = []
+				ctemplate_data = {}
+				ctemplate_data['user_name'] = original_comment['user']['login']
+				ctemplate_data['user_url'] = original_comment['user']['html_url']
+				ctemplate_data['user_avatar'] = original_comment['user']['avatar_url']
+				ctemplate_data['date'] = format_date(original_comment['created_at'])
+				ctemplate_data['url'] =  original_comment['html_url']
+				ctemplate_data['body'] = original_comment['body']
+				
+				comment['body'] = format_comment(ctemplate_data)
+				comment['created_at'] = original_comment['created_at']
+				comments.append(comment)
+				
+		template_data = {}
+		template_data['user_name'] = issue['user']['login']
+		template_data['user_url'] = issue['user']['html_url']
+		template_data['user_avatar'] = issue['user']['avatar_url']
+		template_data['date'] = format_date(issue['created_at'])
+		template_data['url'] =  issue['html_url']
+		template_data['body'] = issue['body']
+
+		if "pull_request" in issue and issue['pull_request']['html_url'] is not None:
+			new_issue['body'] = format_pull_request(template_data)
+		else:
+			new_issue['body'] = format_issue(template_data)
+
+		issue_migration['issue'] = new_issue
+		issue_migration['comments'] = comments
+
+		issue_migrations.append(issue_migration)
+
+	state.current = state.IMPORT_CONFIRMATION
+
+	print("You are about to add to '" + config.get('target', 'repository') + "':")
+	print(" *", len(issue_migrations), "new issues") 
+	print(" *", num_new_comments, "new comments") 
+	print(" *", len(new_milestones), "new milestones") 
+	print(" *", len(new_labels), "new labels") 
+	if not query.yes_no("Are you sure you wish to continue?"):
+		sys.exit()
+
+	state.current = state.IMPORTING
+	
+	for milestone in new_milestones:
+		result_milestone = import_milestone(milestone)
+		milestone['number'] = result_milestone['number']
+		milestone['url'] = result_milestone['url']
+	
+	for label in new_labels:
+		result_label = import_label(label)
+	
+	migration_results = []
+	for issue in new_issues:
+		
+		if 'milestone_object' in issue:
+			issue['milestone'] = issue['milestone_object']['number']
+			del issue['milestone_object']
+		
+		if 'label_objects' in issue:
+			issue_labels = []
+			for label in issue['label_objects']:
+				issue_labels.append(label['name'])
+			issue['labels'] = issue_labels
+			del issue['label_objects']
+		
+		migration_result = send_request('target', "import/issues", issue, POST, "application/vnd.github.golden-comet-preview+json")
+		print("Sent import request. Status: '%s'. Status url: '%s'" % (migration_result['status'], migration_result['import_issues_url']))
+		
+		migration_results.append(migration_result)
+	
+	state.current = state.IMPORT_COMPLETE
+	
+	# TODO wait for import requests to complete
+	
+	return result_issues
+
 
 # Will only import milestones and issues that are in use by the imported issues, and do not exist in the target repository
 def import_issues(issues):
@@ -470,7 +608,10 @@ if __name__ == '__main__':
 	
 	# Further states defined within the function
 	# Finally, add these issues to the target repository
-	import_issues(issues)
+	if config.getboolean('settings', 'use-github-import-api'):
+		import_issues_golden_comet(issues)
+	else:
+		import_issues(issues)
 	
 	state.current = state.COMPLETE
 
