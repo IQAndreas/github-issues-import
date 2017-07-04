@@ -222,7 +222,7 @@ def send_request(which, url, post_data=None, method=None, accept=None):
 			error_details = json.loads(error_details.decode("utf-8"))
 
 			if error.code == 403:
-				print("Got 403 [%s], assuming rate limit error and waiting for 1 minute...", error_details['message'])
+				print("Got 403 [%s], assuming rate limit error and waiting for 1 minute..." % error_details['message'])
 				time.sleep(60)
 				retry = True
 			elif error.code in http_error_messages:
