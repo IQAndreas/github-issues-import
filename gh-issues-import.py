@@ -56,6 +56,8 @@ def init_config():
 	arg_parser.add_argument('--ignore-labels',    dest='ignore_labels',    action='store_true', help="Do not import labels attached to the issue.")
 	
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
+	arg_parser.add_argument('--issue-title-prefix', help="Specify a prefix for issue titles.")
+	arg_parser.add_argument('--issue-label', help="Specify a label to add to all new issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
 	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
 		
@@ -99,6 +101,8 @@ def init_config():
 	if args.target: config.set('target', 'repository', args.target)
 	
 	if args.issue_template: config.set('format', 'issue_template', args.issue_template)
+	if args.issue_title_prefix: config.set('format', 'issue_title_prefix', args.issue_title_prefix)
+	if args.issue_label: config.set('format', 'issue_label', args.issue_label)
 	if args.comment_template: config.set('format', 'comment_template', args.comment_template)
 	if args.pull_request_template: config.set('format', 'pull_request_template', args.pull_request_template)
 	
@@ -324,6 +328,21 @@ def import_issues(issues):
 		new_issue = {}
 		new_issue['title'] = issue['title']
 		
+		#Add custom title prefix?
+		if config.has_option('format', 'issue_title_prefix'):
+			new_issue['title'] = config.get('format', 'issue_title_prefix') + " " + issue['title']
+
+		#Add new label
+		if config.has_option('format', 'issue_label'):
+			new_lable = {
+				"name": config.get('format', 'issue_label'),
+				"color": '000000' #Default to black, easy to find and can be changed globally later
+			}	
+			if 'labels' in issue:
+				issue['labels'].append(new_lable)
+			else:
+				issue['labels'] = [new_lable]
+
 		# Temporary fix for marking closed issues
 		if issue['closed_at']:
 			new_issue['title'] = "[CLOSED] " + new_issue['title']
