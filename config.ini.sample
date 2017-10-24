@@ -16,3 +16,6 @@ repository = OctoDog/Hello-World
 # If unsure, just using '%c' will default to the locale’s appropriate date and time representation.
 #date = %A %b %d, %Y at %H:%M GMT # Sample: Friday Sep 13, 2013 at 22:58 GMT
 
+# If importing issues from multiple sources you can specify a title prefix and label to apply to all issues
+#issue_title_prefix = [old-repo-name]
+#issue_label = old-repo-name
