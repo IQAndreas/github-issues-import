@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import urllib.request, urllib.error, urllib.parse
+import ssl
 import json
 import base64
 import sys, os
@@ -31,6 +32,9 @@ http_error_messages[401] = "ERROR: There was a problem during authentication.\nD
 http_error_messages[403] = http_error_messages[401]; # Basically the same problem. GitHub returns 403 instead to prevent abuse.
 http_error_messages[404] = "ERROR: Unable to find the specified repository.\nDouble check the spelling for the source and target repositories. If either repository is private, make sure the specified user is allowed access to it."
 
+skip_cert_validation_context = ssl.create_default_context()
+skip_cert_validation_context.check_hostname = False
+skip_cert_validation_context.verify_mode = ssl.CERT_NONE
 
 def init_config():
 	
@@ -59,6 +63,8 @@ def init_config():
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
 	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
 		
+	arg_parser.add_argument('--skip-cert-validation',  dest='skip_cert_validation',  action='store_true', help="Ignore certificate validation")
+
 	include_group = arg_parser.add_mutually_exclusive_group(required=True)
 	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
 	include_group.add_argument("--open", dest='import_open', action='store_true', help="Import only open issues.")
@@ -108,7 +114,8 @@ def init_config():
 	
 	config.set('settings', 'import-open-issues',   str(args.import_all or args.import_open));
 	config.set('settings', 'import-closed-issues', str(args.import_all or args.import_closed));
-	
+
+	config.set('settings', 'skip-cert-validation', args.skip_cert_validation)
 	
 	# Make sure no required config values are missing
 	if not config.has_option('source', 'repository') :
@@ -204,7 +211,7 @@ def send_request(which, url, post_data=None):
 	req.add_header("User-Agent", "IQAndreas/github-issues-import")
 	
 	try:
-		response = urllib.request.urlopen(req)
+		response = urlopen(req)
 		json_data = response.read()
 	except urllib.error.HTTPError as error:
 		
@@ -220,6 +227,11 @@ def send_request(which, url, post_data=None):
 			sys.exit(error_message)
 	
 	return json.loads(json_data.decode("utf-8"))
+
+def urlopen(req):
+  if config.get('settings', 'skip-cert-validation'):
+    return urllib.request.urlopen(req, context=skip_cert_validation_context)
+  else: return urllib.request.urlopen(req)
 
 def get_milestones(which):
 	return send_request(which, "milestones?state=open")
