@@ -58,7 +58,9 @@ def init_config():
 	arg_parser.add_argument('--issue-template', help="Specify a template file for use with issues.")
 	arg_parser.add_argument('--comment-template', help="Specify a template file for use with comments.")
 	arg_parser.add_argument('--pull-request-template', help="Specify a template file for use with pull requests.")
-		
+	
+	arg_parser.add_argument('--token', help="The token of the account that will create the new issues.")
+
 	include_group = arg_parser.add_mutually_exclusive_group(required=True)
 	include_group.add_argument("--all", dest='import_all', action='store_true', help="Import all issues, regardless of state.")
 	include_group.add_argument("--open", dest='import_open', action='store_true', help="Import only open issues.")
@@ -94,7 +96,8 @@ def init_config():
 	
 	if args.username: config.set('login', 'username', args.username)
 	if args.password: config.set('login', 'password', args.password)
-	
+	if args.token: config.set('login', 'token', args.token)
+
 	if args.source: config.set('source', 'repository', args.source)
 	if args.target: config.set('target', 'repository', args.target)
 	
@@ -153,7 +156,16 @@ def init_config():
 			else:
 				query_str = "Enter your password for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server'))
 				config.set(which, 'password', query.password(query_str))
-	
+
+		if not config.has_option(which, 'token'):
+			if config.has_option('login', 'token'):
+				config.set(which, 'token', config.get('login', 'token'))
+			elif ( (which == 'target') and query.yes_no("Do you wish to use the same credentials for the target repository?") ):
+				config.set('target', 'token', config.get('source', 'token'))
+			else:
+				query_str = "Enter your token for '%s' at '%s': " % (config.get(which, 'repository'), config.get(which, 'server'))
+				config.set(which, 'token', query.token(query_str))
+
 	get_credentials_for('source')
 	get_credentials_for('target')
 	
@@ -191,13 +203,18 @@ def send_request(which, url, post_data=None):
 
 	if post_data is not None:
 		post_data = json.dumps(post_data).encode("utf-8")
-	
+		
 	full_url = "%s/%s" % (config.get(which, 'url'), url)
 	req = urllib.request.Request(full_url, post_data)
-	
+		
 	username = config.get(which, 'username')
 	password = config.get(which, 'password')
-	req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))
+	token = config.get(which, 'token')
+
+	if token is not None:
+		req.add_header("Authorization", "token " + token)
+	else:
+		req.add_header("Authorization", b"Basic " + base64.urlsafe_b64encode(username.encode("utf-8") + b":" + password.encode("utf-8")))		
 	
 	req.add_header("Content-Type", "application/json")
 	req.add_header("Accept", "application/json")
@@ -222,7 +239,7 @@ def send_request(which, url, post_data=None):
 	return json.loads(json_data.decode("utf-8"))
 
 def get_milestones(which):
-	return send_request(which, "milestones?state=open")
+	return send_request(which, "milestones?state=all")
 
 def get_labels(which):
 	return send_request(which, "labels")
@@ -354,6 +371,9 @@ def import_issues(issues):
 					known_labels.append(issue_label) # Allow it to be found next time
 					new_labels.append(issue_label)   # Put it in a queue to add it later
 		
+		if issue['assignee'] and issue['assignee']['login']:
+			new_issue['assignee'] = issue['assignee']['login']
+
 		template_data = {}
 		template_data['user_name'] = issue['user']['login']
 		template_data['user_url'] = issue['user']['html_url']
