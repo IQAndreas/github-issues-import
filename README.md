@@ -12,6 +12,8 @@ The script will by default look for a file named `config.ini` located in the sam
 To quickly get started, rename `config.ini.sample` to `config.ini`, and edit the fields to match your login info and repository info. If you want to use a different credentials for the source and target repositories, please see [_Configuration: Enterprise Accounts and Advanced Login Options_](http://www.iqandreas.com/github-issues-import/configuration/#enterprise). Store the config file in the same folder as the `gh-issues-import.py` script, or store it in a different folder, using the `--config <file>` option to specify which config file to load in.
 
 **Warning:** The password is stored in plain-text, so avoid storing the config file in a public repository. To avoid this, you can instead pass the username and/or password as arguments by using the `-u <username>` and `-p <password>` flags respectively. If the username or password is not passed in from either of these locations, the user will be prompted for them when the script runs.
+
+If you use 2 factor authentication, use a [personal access token](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) as the password.
  
 Run the script with the following command to import all open issues into the repository defined in the config:
 
